@@ -1,0 +1,2877 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reader Highlighter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&family=Roboto:wght@400;500&family=Lato:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --article-font-family: 'Inter';
+            --article-font-size: 18px;
+            --article-line-height: 1.8;
+            --article-max-width: 800px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* --- Improved Button Interactivity --- */
+        .btn-interactive {
+            transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, filter 0.15s ease-out;
+        }
+
+        .btn-interactive:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .btn-interactive:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-interactive:active {
+            transform: translateY(0px);
+            filter: brightness(0.95);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* --- Enhanced Card Design --- */
+        .article-card-image {
+            height: 150px;
+            object-fit: cover;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .dark .article-card-image {
+            border-bottom-color: #374151;
+        }
+
+        .article-card-actions {
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .highlight-yellow {
+            background-color: rgba(255, 229, 0, 0.5);
+        }
+
+        .highlight-blue {
+            background-color: rgba(0, 176, 255, 0.4);
+        }
+
+        .highlight-green {
+            background-color: rgba(80, 227, 194, 0.5);
+        }
+
+        .highlight-red {
+            background-color: rgba(255, 114, 111, 0.5);
+        }
+
+        .highlight-purple {
+            background-color: rgba(187, 134, 252, 0.5);
+        }
+
+        mark {
+            border-radius: 3px;
+            padding: 2px 1px;
+            cursor: pointer;
+        }
+
+        .search-highlight {
+            background-color: rgba(255, 165, 0, 0.4);
+            color: inherit;
+        }
+
+        .in-article-search-highlight {
+            background-color: #fde047;
+            box-shadow: 0 0 0 1px #f59e0b;
+            border-radius: 2px;
+        }
+
+        .in-article-search-highlight.current {
+            background-color: #fb923c;
+        }
+
+        /* --- Skeleton Loader Styles --- */
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        .skeleton {
+            animation: shimmer 2s infinite linear;
+            background: linear-gradient(to right, #f0f0f0 8%, #e0e0e0 18%, #f0f0f0 33%);
+            background-size: 2000px 100%;
+        }
+
+        .dark .skeleton {
+            background: linear-gradient(to right, #2d3748 8%, #4a5568 18%, #2d3748 33%);
+            background-size: 2000px 100%;
+        }
+
+        .skeleton-card {
+            background-color: #ffffff;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        .dark .skeleton-card {
+            background-color: #1f2937;
+        }
+
+        .skeleton-line {
+            height: 1rem;
+            border-radius: 0.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* --- Tag Suggestions --- */
+        .tag-suggestions {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            max-height: 150px;
+            overflow-y: auto;
+            width: 100%;
+            bottom: 100%;
+            margin-bottom: 4px;
+        }
+
+        .dark .tag-suggestions {
+            background-color: #374151;
+            border-color: #4b5563;
+        }
+
+        .tag-suggestion-item {
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .tag-suggestion-item:hover,
+        .tag-suggestion-item.active {
+            background-color: #f3f4f6;
+        }
+
+        .dark .tag-suggestion-item:hover,
+        .dark .tag-suggestion-item.active {
+            background-color: #4b5563;
+        }
+
+        /* --- Text-to-Speech --- */
+        .tts-speaking {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-radius: 3px;
+        }
+
+        /* --- Collections --- */
+        .collection-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .collection-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .dark .collection-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        .collection-card::before,
+        .collection-card::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: inherit;
+            border-radius: inherit;
+            z-index: -1;
+            transition: transform 0.3s ease;
+        }
+
+        .collection-card::before {
+            top: 4px;
+            transform: scale(0.95);
+            opacity: 0.6;
+        }
+
+        .collection-card::after {
+            top: 8px;
+            transform: scale(0.9);
+            opacity: 0.3;
+        }
+
+        .collection-card:hover::before {
+            transform: scale(0.97) translateY(-2px);
+        }
+
+        .collection-card:hover::after {
+            transform: scale(0.92) translateY(-4px);
+        }
+
+
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .dark ::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #718096;
+        }
+
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Enhanced Article Formatting */
+        .article-content {
+            font-family: var(--article-font-family), sans-serif;
+            font-size: var(--article-font-size);
+            line-height: var(--article-line-height);
+            max-width: var(--article-max-width);
+            margin: 0 auto;
+            color: #374151;
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+        }
+
+        .dark .article-content {
+            color: #d1d5db;
+        }
+
+        .article-content h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin: 2rem 0 1.5rem 0;
+            line-height: 1.2;
+            color: #111827;
+        }
+
+        .dark .article-content h1 {
+            color: #f9fafb;
+        }
+
+        .article-content h2 {
+            font-size: 1.875rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem 0;
+            line-height: 1.3;
+            color: #1f2937;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+
+        .dark .article-content h2 {
+            color: #f3f4f6;
+            border-bottom-color: #4b5563;
+        }
+
+        .article-content h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.75rem 0;
+            line-height: 1.4;
+            color: #374151;
+        }
+
+        .dark .article-content h3 {
+            color: #e5e7eb;
+        }
+
+        .article-content h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 1.25rem 0 0.5rem 0;
+            color: #4b5563;
+        }
+
+        .dark .article-content h4 {
+            color: #d1d5db;
+        }
+
+        .article-content p {
+            margin-bottom: 1.5rem;
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin: 1.5rem 0;
+            padding-left: 2rem;
+        }
+
+        .article-content ul {
+            list-style-type: disc;
+        }
+
+        .article-content ol {
+            list-style-type: decimal;
+        }
+
+        .article-content li {
+            margin-bottom: 0.75rem;
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        .article-content li::marker {
+            color: #6b7280;
+        }
+
+        .dark .article-content li::marker {
+            color: #9ca3af;
+        }
+
+        .article-content blockquote {
+            border-left: 4px solid #3b82f6;
+            background: #f8fafc;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #475569;
+        }
+
+        .dark .article-content blockquote {
+            background: #1e293b;
+            color: #cbd5e1;
+        }
+
+        .article-content a {
+            color: #2563eb;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        .dark .article-content a {
+            color: #60a5fa;
+        }
+
+        .article-content a:hover {
+            color: #1d4ed8;
+        }
+
+        .dark .article-content a:hover {
+            color: #93c5fd;
+        }
+
+        .article-content code {
+            background: #f1f5f9;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+        }
+
+        .dark .article-content code {
+            background: #334155;
+        }
+
+        .article-content pre {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .dark .article-content pre {
+            background: #1e293b;
+            border-color: #475569;
+        }
+
+        .article-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .article-content hr {
+            border: none;
+            border-top: 2px solid #e5e7eb;
+            margin: 2rem 0;
+        }
+
+        .dark .article-content hr {
+            border-top-color: #4b5563;
+        }
+
+        /* Selection styling */
+        .article-content ::selection {
+            background-color: rgba(59, 130, 246, 0.3);
+        }
+
+        /* Highlighter toolbar positioning */
+        #highlighter-toolbar {
+            pointer-events: auto;
+            z-index: 1000;
+        }
+
+        #highlighter-toolbar button {
+            pointer-events: auto;
+        }
+
+        /* Settings Popover */
+        #settings-popover {
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .settings-section {
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .dark .settings-section {
+            border-bottom-color: #4b5563;
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        /* Range input styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #d1d5db;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: none;
+        }
+
+        .dark input[type="range"] {
+            background: #4b5563;
+        }
+
+        /* Home button cursor */
+        .home-button {
+            cursor: pointer;
+        }
+
+        .home-button:hover {
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .clickable-tag {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .clickable-tag:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+
+        /* Toast Notification */
+        #toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s, top 0.3s;
+        }
+
+        #toast.show {
+            opacity: 1;
+            visibility: visible;
+            top: 40px;
+        }
+
+        #toast.success {
+            background-color: #28a745;
+        }
+
+        #toast.error {
+            background-color: #dc3545;
+        }
+
+        /* Back to Top Button */
+        #back-to-top-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            z-index: 1000;
+        }
+
+        #back-to-top-btn.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Highlight Color Filter */
+        .color-filter-btn.active {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+
+        /* Archive Toggle Switch */
+        #archive-toggle:checked~.dot {
+            transform: translateX(100%);
+            background-color: #3b82f6;
+        }
+
+        #archive-toggle:checked~.block {
+            background-color: #93c5fd;
+        }
+    </style>
+
+    <!-- Firebase Configuration -->
+    <script>
+        // NOTE: Replace with your actual Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCB5wSg_L4XqyXUeXdA59Fi4uSSMixSEgg",
+            authDomain: "readify-5516a.firebaseapp.com",
+            projectId: "readify-5516a",
+            storageBucket: "readify-5516a.appspot.com",
+            messagingSenderId: "604766392737",
+            appId: "1:604766392737:web:823ecb1dcaa1262aab7be0"
+        };
+    </script>
+
+</head>
+
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300">
+
+    <!-- Reading Progress Bar -->
+    <div id="progress-bar" class="fixed top-0 left-0 h-1 bg-blue-600 z-50 transition-all duration-150"
+        style="width: 0%;"></div>
+
+    <!-- Toast Notification -->
+    <div id="toast"></div>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top-btn"
+        class="p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 btn-interactive">
+        <i data-lucide="arrow-up" class="h-6 w-6"></i>
+    </button>
+
+    <!-- Main Container -->
+    <div id="app" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-6">
+            <h1 id="home-button" class="text-3xl font-bold text-gray-900 dark:text-white home-button">Readify</h1>
+            <nav class="flex items-center space-x-2">
+                <div id="main-nav" class="hidden bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                    <button id="library-btn" class="nav-btn px-4 py-1 rounded-md text-sm font-semibold">Library</button>
+                    <button id="collections-btn"
+                        class="nav-btn px-4 py-1 rounded-md text-sm font-semibold">Collections</button>
+                    <button id="highlights-btn"
+                        class="nav-btn px-4 py-1 rounded-md text-sm font-semibold">Highlights</button>
+                    <button id="stats-btn" class="nav-btn px-4 py-1 rounded-md text-sm font-semibold">Stats</button>
+                </div>
+                <div id="user-profile" class="hidden items-center space-x-3">
+                    <img id="user-photo" class="h-8 w-8 rounded-full" src="" alt="User photo">
+                    <button id="sign-out-btn"
+                        class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Sign
+                        Out</button>
+                </div>
+                <div class="relative">
+                    <button id="settings-btn"
+                        class="hidden items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+                        title="Settings">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="h-5 w-5">
+                            <path d="M4 12h8" />
+                            <path d="M4 18V6" />
+                            <path d="M12 18V6" />
+                            <path d="M21 18h-2c-1.1 0-2-.9-2-2v-4c0-1.1.9-2 2-2h2" />
+                            <path d="M17 12h4" />
+                        </svg>
+                        <span class="text-sm font-medium">Appearance</span>
+                    </button>
+                </div>
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <svg id="theme-icon-light" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
+                    <svg id="theme-icon-dark" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
+                        </path>
+                    </svg>
+                </button>
+            </nav>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <main id="content-area">
+            <!-- Login View -->
+            <div id="login-view" class="text-center py-24">
+                <i data-lucide="book-marked" class="h-20 w-20 mx-auto text-blue-500 mb-6"></i>
+                <h2 class="text-3xl font-bold mb-3">Welcome to Readify</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">Your personal space to read and highlight
+                    articles.</p>
+                <button id="sign-in-btn"
+                    class="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-shadow flex items-center mx-auto border border-gray-200 dark:border-gray-600 btn-interactive">
+                    <svg class="w-6 h-6 mr-3" viewBox="0 0 48 48">
+                        <path fill="#4285F4"
+                            d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z">
+                        </path>
+                        <path fill="#34A853"
+                            d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.53-4.18 7.09-10.36 7.09-17.65z">
+                        </path>
+                        <path fill="#FBBC05"
+                            d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z">
+                        </path>
+                        <path fill="#EA4335"
+                            d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z">
+                        </path>
+                        <path fill="none" d="M0 0h48v48H0z"></path>
+                    </svg>
+                    Sign in with Google
+                </button>
+            </div>
+
+            <!-- Main App Content (hidden by default) -->
+            <div id="main-app-content" class="hidden">
+                <!-- Library View -->
+                <div id="library-view">
+                    <div id="library-header" class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <h2 id="library-title" class="text-2xl font-bold">All Articles</h2>
+                        <button id="back-to-collections-btn"
+                            class="hidden flex items-center text-blue-600 dark:text-blue-400 hover:underline">
+                            <i data-lucide="arrow-left" class="h-4 w-4 mr-2"></i> Back to Collections
+                        </button>
+                    </div>
+                    <!-- Add Article Section -->
+                    <div class="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                        <h2 class="text-xl font-semibold mb-3">Add New Article</h2>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="url" id="article-url-input" placeholder="Paste article URL here..."
+                                class="flex-grow p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <button id="add-article-btn"
+                                class="bg-blue-600 text-white font-semibold px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed btn-interactive">
+                                <span id="add-article-spinner"
+                                    class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></span>
+                                <span id="add-article-text">Add Article</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filters and Search -->
+                    <div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="relative w-full sm:w-auto">
+                            <i data-lucide="search"
+                                class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"></i>
+                            <input type="search" id="search-library-input" placeholder="Search articles or tags..."
+                                class="w-full sm:w-64 pl-10 p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Show Archived</span>
+                                <label for="archive-toggle" class="flex items-center cursor-pointer">
+                                    <div class="relative">
+                                        <input type="checkbox" id="archive-toggle" class="sr-only">
+                                        <div class="block bg-gray-300 dark:bg-gray-600 w-10 h-6 rounded-full"></div>
+                                        <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition">
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                            <select id="sort-library-select"
+                                class="p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
+                                <option value="newest">Sort by Newest</option>
+                                <option value="oldest">Sort by Oldest</option>
+                                <option value="title">Sort by Title</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Article Grid & Skeletons -->
+                    <div id="skeleton-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                    <div id="article-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                    <div id="library-empty-state" class="hidden text-center py-16">
+                        <i data-lucide="book-open" class="h-16 w-16 mx-auto text-gray-400 mb-4"></i>
+                        <h3 class="text-xl font-semibold">Your library is empty</h3>
+                        <p class="text-gray-500">Add an article using the URL bar above to get started.</p>
+                    </div>
+                </div>
+
+                <!-- Collections View -->
+                <div id="collections-view" class="hidden">
+                    <div class="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                        <h2 class="text-xl font-semibold mb-3">Create New Collection</h2>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="text" id="collection-name-input" placeholder="Enter collection name..."
+                                class="flex-grow p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <button id="add-collection-btn"
+                                class="bg-blue-600 text-white font-semibold px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900 btn-interactive">
+                                Create Collection
+                            </button>
+                        </div>
+                    </div>
+                    <div id="collection-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+                    </div>
+                    <div id="collections-empty-state" class="hidden text-center py-16">
+                        <i data-lucide="folder" class="h-16 w-16 mx-auto text-gray-400 mb-4"></i>
+                        <h3 class="text-xl font-semibold">No collections yet</h3>
+                        <p class="text-gray-500">Create a collection to organize your articles.</p>
+                    </div>
+                </div>
+
+                <!-- Reader View -->
+                <div id="reader-view" class="hidden"></div>
+
+                <!-- Highlights View -->
+                <div id="highlights-view" class="hidden">
+                    <div class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <h2 class="text-2xl font-bold">All Highlights</h2>
+                        <div class="flex items-center gap-4">
+                            <div id="highlight-color-filters" class="flex items-center space-x-2">
+                                <button class="color-filter-btn h-6 w-6 rounded-full" data-color="yellow"
+                                    style="background-color: rgba(255, 229, 0, 0.8);"></button>
+                                <button class="color-filter-btn h-6 w-6 rounded-full" data-color="blue"
+                                    style="background-color: rgba(0, 176, 255, 0.7);"></button>
+                                <button class="color-filter-btn h-6 w-6 rounded-full" data-color="green"
+                                    style="background-color: rgba(80, 227, 194, 0.8);"></button>
+                                <button class="color-filter-btn h-6 w-6 rounded-full" data-color="red"
+                                    style="background-color: rgba(255, 114, 111, 0.8);"></button>
+                                <button class="color-filter-btn h-6 w-6 rounded-full" data-color="purple"
+                                    style="background-color: rgba(187, 134, 252, 0.8);"></button>
+                            </div>
+                            <input type="search" id="search-highlights-input" placeholder="Search highlights..."
+                                class="w-64 p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
+                        </div>
+                    </div>
+                    <div id="highlights-feed" class="space-y-6"></div>
+                    <div id="highlights-empty-state" class="hidden text-center py-16">
+                        <i data-lucide="highlighter" class="h-16 w-16 mx-auto text-gray-400 mb-4"></i>
+                        <h3 class="text-xl font-semibold">No highlights yet</h3>
+                        <p class="text-gray-500">Select text in an article to create your first highlight.</p>
+                    </div>
+                </div>
+
+                <!-- Stats View -->
+                <div id="stats-view" class="hidden">
+                    <h2 class="text-2xl font-bold mb-6">Your Reading Stats</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm text-center">
+                            <i data-lucide="book-open" class="h-10 w-10 mx-auto text-blue-500 mb-3"></i>
+                            <p class="text-3xl font-bold" id="stats-total-articles">0</p>
+                            <p class="text-gray-500 dark:text-gray-400">Total Articles</p>
+                        </div>
+                        <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm text-center">
+                            <i data-lucide="highlighter" class="h-10 w-10 mx-auto text-green-500 mb-3"></i>
+                            <p class="text-3xl font-bold" id="stats-total-highlights">0</p>
+                            <p class="text-gray-500 dark:text-gray-400">Total Highlights</p>
+                        </div>
+                        <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm text-center">
+                            <i data-lucide="tags" class="h-10 w-10 mx-auto text-purple-500 mb-3"></i>
+                            <p class="text-3xl font-bold" id="stats-top-tag">-</p>
+                            <p class="text-gray-500 dark:text-gray-400">Most Used Tag</p>
+                        </div>
+                        <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm text-center">
+                            <i data-lucide="palette" class="h-10 w-10 mx-auto text-red-500 mb-3"></i>
+                            <p class="text-3xl font-bold flex justify-center items-center gap-2" id="stats-top-color">-
+                            </p>
+                            <p class="text-gray-500 dark:text-gray-400">Favorite Color</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Highlighter Toolbar -->
+    <div id="highlighter-toolbar"
+        class="hidden fixed p-2 bg-gray-900 dark:bg-gray-700 rounded-lg shadow-lg flex items-center space-x-2 z-50">
+        <button class="color-btn h-8 w-8 rounded-full hover:scale-110 transition-transform" data-color="yellow"
+            style="background-color: rgba(255, 229, 0, 0.8);" title="Yellow highlight"></button>
+        <button class="color-btn h-8 w-8 rounded-full hover:scale-110 transition-transform" data-color="blue"
+            style="background-color: rgba(0, 176, 255, 0.7);" title="Blue highlight"></button>
+        <button class="color-btn h-8 w-8 rounded-full hover:scale-110 transition-transform" data-color="green"
+            style="background-color: rgba(80, 227, 194, 0.8);" title="Green highlight"></button>
+        <button class="color-btn h-8 w-8 rounded-full hover:scale-110 transition-transform" data-color="red"
+            style="background-color: rgba(255, 114, 111, 0.8);" title="Red highlight"></button>
+        <button class="color-btn h-8 w-8 rounded-full hover:scale-110 transition-transform" data-color="purple"
+            style="background-color: rgba(187, 134, 252, 0.8);" title="Purple highlight"></button>
+        <div class="w-px h-6 bg-gray-600 dark:bg-gray-500 mx-1"></div>
+        <button id="add-note-btn" class="p-1.5 text-white hover:bg-gray-700 dark:hover:bg-gray-600 rounded-md"
+            title="Add note">
+            <i data-lucide="sticky-note" class="h-5 w-5"></i>
+        </button>
+        <button id="share-highlight-btn"
+            class="p-1.5 text-white hover:bg-gray-700 dark:hover:bg-gray-600 rounded-md hidden" title="Share highlight">
+            <i data-lucide="share-2" class="h-5 w-5"></i>
+        </button>
+        <button id="delete-highlight-btn"
+            class="p-1.5 text-white hover:bg-gray-700 dark:hover:bg-gray-600 rounded-md hidden"
+            title="Delete highlight">
+            <i data-lucide="trash-2" class="h-5 w-5"></i>
+        </button>
+    </div>
+
+    <!-- Note Modal -->
+    <div id="note-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
+            <h3 class="text-lg font-semibold mb-4">Add a Note</h3>
+            <textarea id="note-textarea" rows="4"
+                class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                placeholder="Type your note here..."></textarea>
+            <div class="mt-4 flex justify-end space-x-3">
+                <button id="cancel-note-btn"
+                    class="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                <button id="save-note-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save
+                    Note</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
+            <h3 id="confirm-modal-title" class="text-lg font-semibold mb-4">Are you sure?</h3>
+            <p id="confirm-modal-text" class="text-gray-600 dark:text-gray-300 mb-6">This action cannot be undone.</p>
+            <div class="mt-4 flex justify-end space-x-3">
+                <button id="cancel-confirm-btn"
+                    class="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                <button id="confirm-btn"
+                    class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add to Collection Modal -->
+    <div id="add-to-collection-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
+            <h3 class="text-lg font-semibold mb-4">Add to Collection</h3>
+            <select id="collection-select"
+                class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 mb-4">
+                <!-- Options will be populated by JS -->
+            </select>
+            <div class="mt-4 flex justify-end space-x-3">
+                <button id="cancel-add-to-collection-btn"
+                    class="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                <button id="save-add-to-collection-btn"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Settings Popover -->
+    <div id="settings-popover"
+        class="hidden absolute top-20 right-8 bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-xs p-6 z-40 origin-top-right">
+        <div class="space-y-6">
+            <!-- Font Family -->
+            <div class="settings-section">
+                <label class="block text-sm font-medium mb-3">Font Family</label>
+                <select id="font-family-select"
+                    class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                    <option value="Inter">Inter (Default)</option>
+                    <option value="Merriweather">Merriweather</option>
+                    <option value="Open Sans">Open Sans</option>
+                    <option value="Roboto">Roboto</option>
+                    <option value="Lato">Lato</option>
+                </select>
+            </div>
+
+            <!-- Font Size -->
+            <div class="settings-section">
+                <label class="block text-sm font-medium mb-2">Font Size</label>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm">Aa</span>
+                    <input type="range" id="font-size-range" min="14" max="24" value="18" class="flex-1">
+                    <span class="text-lg">Aa</span>
+                </div>
+            </div>
+
+            <!-- Line Height -->
+            <div class="settings-section">
+                <label class="block text-sm font-medium mb-2">Line Height</label>
+                <div class="flex items-center space-x-4">
+                    <i data-lucide="arrow-up-down" class="h-4 w-4"></i>
+                    <input type="range" id="line-height-range" min="1.2" max="2.5" step="0.1" value="1.8"
+                        class="flex-1">
+                </div>
+            </div>
+
+            <!-- Reading Width -->
+            <div class="settings-section">
+                <label class="block text-sm font-medium mb-2">Reading Width</label>
+                <div class="flex items-center space-x-4">
+                    <i data-lucide="move-horizontal" class="h-4 w-4"></i>
+                    <input type="range" id="max-width-range" min="600" max="1200" step="50" value="800" class="flex-1">
+                </div>
+            </div>
+
+            <!-- Theme Preset -->
+            <div class="settings-section">
+                <label class="block text-sm font-medium mb-3">Theme</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button
+                        class="theme-preset-btn p-2 rounded-md border-2 border-transparent hover:border-blue-500 transition-colors flex flex-col items-center"
+                        data-theme="default">
+                        <div class="w-full h-8 bg-white border rounded mb-1"></div>
+                        <span class="text-xs">Default</span>
+                    </button>
+                    <button
+                        class="theme-preset-btn p-2 rounded-md border-2 border-transparent hover:border-blue-500 transition-colors flex flex-col items-center"
+                        data-theme="sepia">
+                        <div class="w-full h-8 bg-yellow-50 border rounded mb-1"></div>
+                        <span class="text-xs">Sepia</span>
+                    </button>
+                    <button
+                        class="theme-preset-btn p-2 rounded-md border-2 border-transparent hover:border-blue-500 transition-colors flex flex-col items-center"
+                        data-theme="dark">
+                        <div class="w-full h-8 bg-gray-800 border rounded mb-1"></div>
+                        <span class="text-xs">Dark</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JavaScript Logic -->
+    <script type="module">
+        // --- Firebase SDK Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, onSnapshot, collection, query, deleteDoc, updateDoc, serverTimestamp, arrayUnion, arrayRemove, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- App State ---
+        let app, db, auth, userId;
+        let articles = [];
+        let highlights = [];
+        let collections = [];
+        let currentArticle = null;
+        let currentSelection = null;
+        let currentHighlightId = null;
+        let currentCollectionId = null;
+        let articleToAddToCollection = null;
+        let unsubscribeArticles = null;
+        let unsubscribeHighlights = null;
+        let unsubscribeCollections = null;
+        let toastTimeout = null;
+        let confirmCallback = null;
+        let showArchived = false;
+        let activeHighlightColorFilter = null;
+        let readingPositionSaveTimeout = null;
+        let inArticleSearchResults = [];
+        let currentSearchResultIndex = -1;
+        let isInitialArticleLoad = true;
+        let ttsUtterance = null;
+        let ttsSentences = [];
+        let currentTtsSentenceIndex = 0;
+
+        // --- UI Element References ---
+        const loginView = document.getElementById('login-view');
+        const mainAppContent = document.getElementById('main-app-content');
+        const mainNav = document.getElementById('main-nav');
+        const userProfile = document.getElementById('user-profile');
+        const userPhoto = document.getElementById('user-photo');
+        const libraryView = document.getElementById('library-view');
+        const collectionsView = document.getElementById('collections-view');
+        const readerView = document.getElementById('reader-view');
+        const highlightsView = document.getElementById('highlights-view');
+        const statsView = document.getElementById('stats-view');
+        const libraryBtn = document.getElementById('library-btn');
+        const collectionsBtn = document.getElementById('collections-btn');
+        const highlightsBtn = document.getElementById('highlights-btn');
+        const statsBtn = document.getElementById('stats-btn');
+        const articleGrid = document.getElementById('article-grid');
+        const collectionGrid = document.getElementById('collection-grid');
+        const skeletonGrid = document.getElementById('skeleton-grid');
+        const highlightsFeed = document.getElementById('highlights-feed');
+        const highlighterToolbar = document.getElementById('highlighter-toolbar');
+        const noteModal = document.getElementById('note-modal');
+        const settingsPopover = document.getElementById('settings-popover');
+        const confirmModal = document.getElementById('confirm-modal');
+        const addToCollectionModal = document.getElementById('add-to-collection-modal');
+        const addArticleBtn = document.getElementById('add-article-btn');
+        const articleUrlInput = document.getElementById('article-url-input');
+        const libraryEmptyState = document.getElementById('library-empty-state');
+        const collectionsEmptyState = document.getElementById('collections-empty-state');
+        const highlightsEmptyState = document.getElementById('highlights-empty-state');
+        const settingsBtn = document.getElementById('settings-btn');
+        const homeButton = document.getElementById('home-button');
+        const progressBar = document.getElementById('progress-bar');
+        const backToTopBtn = document.getElementById('back-to-top-btn');
+        const toast = document.getElementById('toast');
+        const archiveToggle = document.getElementById('archive-toggle');
+        const highlightColorFilters = document.getElementById('highlight-color-filters');
+
+        // --- Settings State ---
+        let settings = {
+            fontFamily: 'Inter',
+            fontSize: 18,
+            lineHeight: 1.8,
+            maxWidth: 800,
+            theme: 'default'
+        };
+
+        // --- Firebase & Authentication ---
+        function initializeAppCore() {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            onAuthStateChanged(auth, user => {
+                if (user) {
+                    userId = user.uid;
+                    userPhoto.src = user.photoURL;
+                    isInitialArticleLoad = true;
+
+                    loginView.style.display = 'none';
+                    mainAppContent.style.display = 'block';
+                    mainNav.style.display = 'flex';
+                    userProfile.style.display = 'flex';
+                    settingsBtn.style.display = 'flex';
+
+                    loadSettings();
+                    setupFirestoreListeners();
+                } else {
+                    userId = null;
+                    isInitialArticleLoad = true;
+                    loginView.style.display = 'block';
+                    mainAppContent.style.display = 'none';
+                    mainNav.style.display = 'none';
+                    userProfile.style.display = 'none';
+                    settingsBtn.style.display = 'none';
+
+                    if (unsubscribeArticles) unsubscribeArticles();
+                    if (unsubscribeHighlights) unsubscribeHighlights();
+                    if (unsubscribeCollections) unsubscribeCollections();
+                    articles = [];
+                    highlights = [];
+                    collections = [];
+                    renderLibrary();
+                }
+            });
+        }
+
+        async function handleSignIn() {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("Google Sign-In failed:", error);
+                showToast("Sign-in failed. Please try again.", "error");
+            }
+        }
+
+        async function handleSignOut() {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Sign Out failed:", error);
+            }
+        }
+
+        function setupFirestoreListeners() {
+            if (unsubscribeArticles) unsubscribeArticles();
+            if (unsubscribeHighlights) unsubscribeHighlights();
+            if (unsubscribeCollections) unsubscribeCollections();
+
+            const articlesQuery = query(collection(db, `users/${userId}/articles`));
+            unsubscribeArticles = onSnapshot(articlesQuery, snapshot => {
+                articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                isInitialArticleLoad = false;
+                if (libraryView.style.display === 'block') {
+                    renderLibrary();
+                }
+            });
+
+            const highlightsQuery = query(collection(db, `users/${userId}/highlights`));
+            unsubscribeHighlights = onSnapshot(highlightsQuery, snapshot => {
+                highlights = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (highlightsView.style.display !== 'none') {
+                    renderHighlights();
+                }
+                if (currentArticle) {
+                    applyHighlightsToReader();
+                }
+            });
+
+            const collectionsQuery = query(collection(db, `users/${userId}/collections`));
+            unsubscribeCollections = onSnapshot(collectionsQuery, snapshot => {
+                collections = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (collectionsView.style.display === 'block') {
+                    renderCollections();
+                }
+            });
+        }
+
+        // --- Settings Management ---
+        function loadSettings() {
+            const savedSettings = localStorage.getItem(`readify_settings_${userId}`);
+            if (savedSettings) {
+                settings = { ...settings, ...JSON.parse(savedSettings) };
+            }
+            applySettings();
+            updateSettingsUI();
+        }
+
+        function saveSettings() {
+            localStorage.setItem(`readify_settings_${userId}`, JSON.stringify(settings));
+            applySettings();
+        }
+
+        function applySettings() {
+            const root = document.documentElement;
+            root.style.setProperty('--article-font-family', settings.fontFamily);
+            root.style.setProperty('--article-font-size', `${settings.fontSize}px`);
+            root.style.setProperty('--article-line-height', settings.lineHeight.toString());
+            root.style.setProperty('--article-max-width', `${settings.maxWidth}px`);
+
+            const readerContainer = document.querySelector('#reader-view > div');
+            if (readerContainer) {
+                readerContainer.classList.remove('sepia-theme', 'dark-theme');
+                if (settings.theme === 'sepia') {
+                    readerContainer.classList.add('sepia-theme');
+                } else if (settings.theme === 'dark') {
+                    readerContainer.classList.add('dark-theme');
+                }
+            }
+        }
+
+        function updateSettingsUI() {
+            document.getElementById('font-family-select').value = settings.fontFamily;
+            document.getElementById('font-size-range').value = settings.fontSize;
+            document.getElementById('line-height-range').value = settings.lineHeight;
+            document.getElementById('max-width-range').value = settings.maxWidth;
+
+            document.querySelectorAll('.theme-preset-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500');
+                if (btn.dataset.theme === settings.theme) {
+                    btn.classList.add('border-blue-500');
+                }
+            });
+        }
+
+        function resetSettings() {
+            settings = {
+                fontFamily: 'Inter',
+                fontSize: 18,
+                lineHeight: 1.8,
+                maxWidth: 800,
+                theme: 'default'
+            };
+            updateSettingsUI();
+            applySettings();
+        }
+
+        // --- View Management ---
+        function showView(view) {
+            stopTTS();
+            libraryView.style.display = 'none';
+            collectionsView.style.display = 'none';
+            readerView.style.display = 'none';
+            highlightsView.style.display = 'none';
+            statsView.style.display = 'none';
+            highlighterToolbar.style.display = 'none';
+            progressBar.style.width = '0%';
+
+            clearInArticleSearch();
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-white');
+                btn.classList.add('text-gray-500', 'dark:text-gray-400');
+            });
+
+            if (view === 'library') {
+                libraryView.style.display = 'block';
+                libraryBtn.classList.add('bg-white', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-white');
+                libraryBtn.classList.remove('text-gray-500', 'dark:text-gray-400');
+                currentArticle = null;
+                renderLibrary();
+            } else if (view === 'collections') {
+                collectionsView.style.display = 'block';
+                collectionsBtn.classList.add('bg-white', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-white');
+                collectionsBtn.classList.remove('text-gray-500', 'dark:text-gray-400');
+                renderCollections();
+            }
+            else if (view === 'reader') {
+                readerView.style.display = 'block';
+            } else if (view === 'highlights') {
+                highlightsView.style.display = 'block';
+                highlightsBtn.classList.add('bg-white', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-white');
+                highlightsBtn.classList.remove('text-gray-500', 'dark:text-gray-400');
+                renderHighlights();
+            } else if (view === 'stats') {
+                statsView.style.display = 'block';
+                statsBtn.classList.add('bg-white', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-white');
+                statsBtn.classList.remove('text-gray-500', 'dark:text-gray-400');
+                renderStats();
+            }
+        }
+
+        // --- Enhanced Article Content Processing ---
+        function processArticleContent(content) {
+            if (!content) return '';
+            const lines = content.split('\n').filter(line => line.trim());
+            let processedLines = [];
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line.length < 3) continue;
+                if (line.match(/^#{1,6}\s/)) {
+                    const level = line.match(/^#{1,6}/)[0].length;
+                    const text = line.replace(/^#{1,6}\s/, '');
+                    processedLines.push(`<h${Math.min(level, 4)}>${text}</h${Math.min(level, 4)}>`);
+                } else if (line.length < 100 && (
+                    line.match(/^[A-Z][A-Za-z0-9\s\-:]{10,}$/) ||
+                    (i < lines.length - 1 && lines[i + 1] && lines[i + 1].match(/^[-=]{3,}$/))
+                )) {
+                    if (i < 3) {
+                        processedLines.push(`<h2>${line}</h2>`);
+                    } else {
+                        processedLines.push(`<h3>${line}</h3>`);
+                    }
+                    if (i < lines.length - 1 && lines[i + 1] && lines[i + 1].match(/^[-=]{3,}$/)) {
+                        i++;
+                    }
+                } else if (line.match(/^\d+\.\s/) || line.match(/^[•\-\*]\s/)) {
+                    const isOrdered = line.match(/^\d+\.\s/);
+                    const text = line.replace(/^(\d+\.\s|[•\-\*]\s)/, '');
+                    const prevLine = processedLines[processedLines.length - 1];
+                    const isNewList = !prevLine || (!prevLine.includes('<li>') && !prevLine.includes('<ul>') && !prevLine.includes('<ol>'));
+                    if (isNewList) {
+                        if (isOrdered) {
+                            processedLines.push(`<ol><li>${text}</li>`);
+                        } else {
+                            processedLines.push(`<ul><li>${text}</li>`);
+                        }
+                    } else {
+                        processedLines.push(`<li>${text}</li>`);
+                    }
+                } else if (line.match(/^>/)) {
+                    const text = line.replace(/^>\s?/, '');
+                    processedLines.push(`<blockquote><p>${text}</p></blockquote>`);
+                } else if (line.length > 20) {
+                    processedLines.push(`<p>${line}</p>`);
+                }
+            }
+            let result = processedLines.join('\n');
+            if (result.includes('<ul><li>') && !result.includes('</ul>')) {
+                result = result.replace(/(<ul><li>.*?)(?=<(?!li>|\/li>|ul>|\/ul>))/g, '$1</ul>');
+                if (!result.endsWith('</ul>') && result.includes('<ul>')) {
+                    result += '</ul>';
+                }
+            }
+            if (result.includes('<ol><li>') && !result.includes('</ol>')) {
+                result = result.replace(/(<ol><li>.*?)(?=<(?!li>|\/li>|ol>|\/ol>))/g, '$1</ol>');
+                if (!result.endsWith('</ol>') && result.includes('<ol>')) {
+                    result += '</ol>';
+                }
+            }
+            result = result.replace(/(https?:\/\/[^\s<>]+)/g, '<a href="$1" target="_blank">$1</a>');
+            result = result.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            result = result.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            result = result.replace(/`(.*?)`/g, '<code>$1</code>');
+            return result;
+        }
+
+        // --- Rendering Functions ---
+        function renderSkeletons() {
+            skeletonGrid.style.display = 'grid';
+            articleGrid.style.display = 'none';
+            libraryEmptyState.style.display = 'none';
+
+            let skeletonHTML = '';
+            for (let i = 0; i < 6; i++) {
+                skeletonHTML += `
+                    <div class="skeleton-card overflow-hidden">
+                        <div class="skeleton h-36"></div>
+                        <div class="p-4">
+                            <div class="skeleton skeleton-line" style="width: 40%;"></div>
+                            <div class="skeleton skeleton-line" style="width: 80%; height: 1.5rem; margin-bottom: 1rem;"></div>
+                            <div class="skeleton skeleton-line" style="width: 70%;"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            skeletonGrid.innerHTML = skeletonHTML;
+        }
+
+        function renderLibrary() {
+            if (isInitialArticleLoad && !currentCollectionId) {
+                renderSkeletons();
+                return;
+            }
+
+            skeletonGrid.style.display = 'none';
+            articleGrid.style.display = 'grid';
+
+            const libraryTitle = document.getElementById('library-title');
+            const backToCollectionsBtn = document.getElementById('back-to-collections-btn');
+
+            if (currentCollectionId) {
+                const collection = collections.find(c => c.id === currentCollectionId);
+                libraryTitle.textContent = collection ? collection.name : 'Collection';
+                backToCollectionsBtn.style.display = 'flex';
+            } else {
+                libraryTitle.textContent = 'All Articles';
+                backToCollectionsBtn.style.display = 'none';
+            }
+
+
+            const searchTerm = document.getElementById('search-library-input')?.value.toLowerCase() || '';
+            const sortBy = document.getElementById('sort-library-select')?.value || 'newest';
+
+            let filteredArticles = articles.filter(article => {
+                const isArchivedMatch = showArchived ? article.isArchived : !article.isArchived;
+                const isSearchMatch = searchTerm === '' ||
+                    article.title.toLowerCase().includes(searchTerm) ||
+                    article.source.toLowerCase().includes(searchTerm) ||
+                    (article.tags && article.tags.some(tag => tag.toLowerCase().includes(searchTerm)));
+
+                const inCollection = currentCollectionId ? article.collectionId === currentCollectionId : true;
+
+                return isArchivedMatch && isSearchMatch && inCollection;
+            });
+
+            filteredArticles.sort((a, b) => {
+                if (sortBy === 'newest') return (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0);
+                if (sortBy === 'oldest') return (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0);
+                if (sortBy === 'title') return a.title.localeCompare(b.title);
+                return 0;
+            });
+
+            const highlightRegex = searchTerm ? new RegExp(`(${searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi') : null;
+
+
+            if (filteredArticles.length === 0) {
+                articleGrid.innerHTML = '';
+                libraryEmptyState.style.display = 'block';
+                libraryEmptyState.querySelector('h3').textContent = currentCollectionId ? 'This collection is empty' : 'Your library is empty';
+            } else {
+                libraryEmptyState.style.display = 'none';
+                articleGrid.innerHTML = filteredArticles.map(article => {
+                    const titleHTML = highlightRegex ? article.title.replace(highlightRegex, '<mark class="search-highlight">$1</mark>') : article.title;
+                    const tagsHTML = (article.tags || []).map(tag => {
+                        const tagText = highlightRegex ? tag.replace(highlightRegex, '<mark class="search-highlight">$1</mark>') : tag;
+                        return `<span class="clickable-tag bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-300 flex items-center gap-1" data-tag="${tag}">
+                                    ${tagText}
+                                    <i data-lucide="x" class="h-3 w-3 delete-tag-btn" data-tag-to-delete="${tag}"></i>
+                                </span>`;
+                    }).join('');
+
+                    const imageHTML = article.imageUrl
+                        ? `<img src="${article.imageUrl}" alt="" class="article-card-image" onerror="this.style.display='none'">`
+                        : '';
+
+                    return `
+                    <div class="article-card group flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" data-id="${article.id}">
+                        ${imageHTML}
+                        <div class="p-5 flex-grow flex flex-col">
+                            <div class="flex justify-between items-center mb-1">
+                                <p class="text-sm text-gray-500 dark:text-gray-400 truncate">${article.source}</p>
+                                ${article.readTime ? `<p class="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">${article.readTime} min read</p>` : ''}
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">${titleHTML}</h3>
+                            <div class="flex-grow"></div>
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                ${tagsHTML}
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 px-5 py-3 flex justify-between items-center">
+                             <div class="relative flex items-center gap-2">
+                                <input type="text" placeholder="Add tag..." class="add-tag-input text-sm p-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 w-24">
+                                <button class="add-tag-btn text-blue-500 hover:text-blue-700 dark:hover:text-blue-400" data-id="${article.id}">
+                                    <i data-lucide="plus-circle" class="h-5 w-5"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2 article-card-actions opacity-0 group-hover:opacity-100">
+                                <button class="add-to-collection-btn text-gray-500 hover:text-gray-700 dark:hover:text-gray-400" data-id="${article.id}" title="Add to Collection">
+                                    <i data-lucide="folder-plus" class="h-5 w-5"></i>
+                                </button>
+                                <button class="archive-article-btn text-gray-500 hover:text-gray-700 dark:hover:text-gray-400" data-id="${article.id}" title="${article.isArchived ? 'Unarchive' : 'Archive'}">
+                                    <i data-lucide="${article.isArchived ? 'unarchive' : 'archive'}" class="h-5 w-5"></i>
+                                </button>
+                                <button class="delete-article-btn text-red-500 hover:text-red-700 dark:hover:text-red-400" data-id="${article.id}">
+                                    <i data-lucide="trash-2" class="h-5 w-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `}).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function renderCollections() {
+            if (collections.length === 0) {
+                collectionGrid.innerHTML = '';
+                collectionsEmptyState.style.display = 'block';
+            } else {
+                collectionsEmptyState.style.display = 'none';
+                collectionGrid.innerHTML = collections.map(collection => {
+                    const articleCount = articles.filter(a => a.collectionId === collection.id).length;
+                    return `
+                    <div class="collection-card relative group bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5 flex flex-col items-center justify-center text-center cursor-pointer" data-id="${collection.id}">
+                        <div class="relative w-full flex items-center justify-center">
+                            <i data-lucide="folder" class="h-24 w-24 text-blue-500 mb-3"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 dark:text-white mt-4">${collection.name}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">${articleCount} articles</p>
+                        <button class="delete-collection-btn absolute top-2 right-2 p-1.5 rounded-full bg-white dark:bg-gray-700 text-red-500 hover:bg-red-100 dark:hover:bg-red-900 opacity-0 group-hover:opacity-100 transition-opacity" data-id="${collection.id}">
+                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                        </button>
+                    </div>
+                    `;
+                }).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function renderReader() {
+            if (!currentArticle) return;
+
+            const processedContent = processArticleContent(currentArticle.content);
+            const authorInfo = currentArticle.author ? `<span class="font-medium">${currentArticle.author}</span>` : '';
+            const dateInfo = currentArticle.publishedDate ? ` &bull; ${currentArticle.publishedDate}` : '';
+            const readTimeInfo = currentArticle.readTime ? ` &bull; ${currentArticle.readTime} min read` : '';
+
+            const metadataHTML = `
+                <div class="text-gray-600 dark:text-gray-400 mb-8 text-sm">
+                    From <span class="font-medium">${currentArticle.source}</span>
+                    ${authorInfo ? ` &bull; By ${authorInfo}` : ''}
+                    ${dateInfo}
+                    ${readTimeInfo}
+                </div>
+            `;
+
+            readerView.innerHTML = `
+                <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 sm:p-10 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-6">
+                        <button id="back-to-library-btn" class="flex items-center text-blue-600 dark:text-blue-400 hover:underline">
+                            <i data-lucide="arrow-left" class="h-4 w-4 mr-2"></i> Back to ${currentCollectionId ? 'Collection' : 'Library'}
+                        </button>
+                        <div class="flex items-center gap-4">
+                             <div id="tts-controls" class="flex items-center gap-2">
+                                <button id="tts-play-btn" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><i data-lucide="play-circle" class="h-5 w-5"></i></button>
+                                <button id="tts-pause-btn" class="hidden p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><i data-lucide="pause-circle" class="h-5 w-5"></i></button>
+                                <button id="tts-stop-btn" class="hidden p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><i data-lucide="stop-circle" class="h-5 w-5"></i></button>
+                            </div>
+                            <div id="in-article-search-container" class="flex items-center gap-1">
+                                <input type="search" id="in-article-search-input" placeholder="Search in article..." class="w-40 p-1 text-sm border rounded-md dark:bg-gray-700 dark:border-gray-600">
+                                <span id="in-article-search-results-count" class="text-sm text-gray-500 w-12 text-center"></span>
+                                <button id="in-article-prev-btn" class="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><i data-lucide="chevron-up" class="h-4 w-4"></i></button>
+                                <button id="in-article-next-btn" class="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><i data-lucide="chevron-down" class="h-4 w-4"></i></button>
+                                <button id="in-article-close-btn" class="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><i data-lucide="x" class="h-4 w-4"></i></button>
+                            </div>
+                            <button id="export-highlights-btn" class="flex items-center text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                                <i data-lucide="download" class="h-4 w-4 mr-2"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                    <h1 class="text-3xl md:text-4xl font-bold mb-2 text-gray-900 dark:text-white">${currentArticle.title}</h1>
+                    ${metadataHTML}
+                    <div id="article-content" class="article-content">
+                        ${processedContent}
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                applySettings();
+                applyHighlightsToReader();
+                setupTextSelectionListeners();
+                if (currentArticle.lastReadPosition > 0) {
+                    window.scrollTo(0, currentArticle.lastReadPosition);
+                }
+                lucide.createIcons();
+            }, 100);
+        }
+
+        function renderHighlights() {
+            const searchTerm = document.getElementById('search-highlights-input')?.value.toLowerCase() || '';
+            let filteredHighlights = highlights;
+            if (activeHighlightColorFilter) {
+                filteredHighlights = filteredHighlights.filter(h => h.color === activeHighlightColorFilter);
+            }
+            if (searchTerm) {
+                filteredHighlights = filteredHighlights.filter(h =>
+                    h.text.toLowerCase().includes(searchTerm) ||
+                    (h.note && h.note.toLowerCase().includes(searchTerm))
+                );
+            }
+            if (filteredHighlights.length === 0 && highlights.length > 0) {
+                highlightsFeed.innerHTML = `<p class="text-center text-gray-500">No highlights match your filters.</p>`;
+            } else if (highlights.length === 0) {
+                highlightsFeed.innerHTML = '';
+                highlightsEmptyState.style.display = 'block';
+            } else {
+                highlightsEmptyState.style.display = 'none';
+                highlightsFeed.innerHTML = filteredHighlights.map(h => {
+                    const article = articles.find(a => a.id === h.articleId);
+                    return `
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm">
+                        <blockquote class="border-l-4 border-${h.color}-400 pl-4 mb-3">
+                            <p class="text-gray-800 dark:text-gray-200 italic">"${h.text}"</p>
+                        </blockquote>
+                        ${h.note ? `<p class="text-gray-600 dark:text-gray-300 mt-2 mb-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-md"><i data-lucide="sticky-note" class="inline h-4 w-4 mr-2"></i>${h.note}</p>` : ''}
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            From: <a href="#" class="highlight-source-link text-blue-600 dark:text-blue-400 hover:underline" data-article-id="${h.articleId}">${article ? article.title : 'Unknown Article'}</a>
+                        </p>
+                    </div>
+                    `;
+                }).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function renderStats() {
+            document.getElementById('stats-total-articles').textContent = articles.length;
+            document.getElementById('stats-total-highlights').textContent = highlights.length;
+            const tagCounts = articles.flatMap(a => a.tags || []).reduce((acc, tag) => {
+                acc[tag] = (acc[tag] || 0) + 1;
+                return acc;
+            }, {});
+            const topTag = Object.keys(tagCounts).reduce((a, b) => tagCounts[a] > tagCounts[b] ? a : b, null);
+            document.getElementById('stats-top-tag').textContent = topTag || '-';
+            const colorCounts = highlights.reduce((acc, h) => {
+                acc[h.color] = (acc[h.color] || 0) + 1;
+                return acc;
+            }, {});
+            const topColor = Object.keys(colorCounts).reduce((a, b) => colorCounts[a] > colorCounts[b] ? a : b, null);
+            const topColorEl = document.getElementById('stats-top-color');
+            if (topColor) {
+                topColorEl.innerHTML = `<div class="h-6 w-6 rounded-full" style="background-color: rgba(${topColor === 'yellow' ? '255, 229, 0, 0.8' :
+                    topColor === 'blue' ? '0, 176, 255, 0.7' :
+                        topColor === 'green' ? '80, 227, 194, 0.8' :
+                            topColor === 'red' ? '255, 114, 111, 0.8' :
+                                '187, 134, 252, 0.8'
+                    });"></div> <span class="capitalize">${topColor}</span>`;
+            } else {
+                topColorEl.textContent = '-';
+            }
+            lucide.createIcons();
+        }
+
+
+        // --- Article & Data Handling ---
+        async function handleAddArticle() {
+            const url = articleUrlInput.value.trim();
+            if (!url || !userId) return;
+
+            setAddButtonLoading(true);
+
+            try {
+                const parsedArticle = await fetchAndParseArticle(url);
+                await addDoc(collection(db, `users/${userId}/articles`), {
+                    ...parsedArticle,
+                    collectionId: currentCollectionId,
+                    createdAt: serverTimestamp()
+                });
+                articleUrlInput.value = '';
+                showToast("Article added successfully!");
+            } catch (error) {
+                console.error("Error adding article:", error);
+                showToast("Failed to add article.", "error");
+            } finally {
+                setAddButtonLoading(false);
+            }
+        }
+
+        function setAddButtonLoading(isLoading) {
+            const spinner = document.getElementById('add-article-spinner');
+            const text = document.getElementById('add-article-text');
+            addArticleBtn.disabled = isLoading;
+            spinner.style.display = isLoading ? 'block' : 'none';
+            text.style.display = isLoading ? 'none' : 'block';
+        }
+
+        function formatPublishedDate(dateString) {
+            if (!dateString) return null;
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function fetchAndParseArticle(url) {
+            const endpoint = `https://r.jina.ai/${encodeURIComponent(url)}`;
+            const response = await fetch(endpoint, {
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (!data || !data.data || !data.data.content) {
+                throw new Error("Invalid response structure from parser API.");
+            }
+
+            const wordCount = data.data.content.split(' ').length;
+            const readTime = Math.ceil(wordCount / 225);
+
+            return {
+                url: data.data.url,
+                title: data.data.title || "Untitled",
+                source: new URL(data.data.url).hostname.replace('www.', ''),
+                content: data.data.content,
+                author: data.data.author || null,
+                publishedDate: formatPublishedDate(data.data.publishedTime),
+                imageUrl: data.data.image || null,
+                tags: [],
+                readTime: readTime,
+                isArchived: false,
+                lastReadPosition: 0
+            };
+        }
+
+        async function deleteArticle(articleId) {
+            showConfirmModal("Delete this article?", "This will also delete all associated highlights.", async () => {
+                await deleteDoc(doc(db, `users/${userId}/articles`, articleId));
+                const highlightsToDelete = highlights.filter(h => h.articleId === articleId);
+                for (const highlight of highlightsToDelete) {
+                    await deleteDoc(doc(db, `users/${userId}/highlights`, highlight.id));
+                }
+                showToast("Article deleted.", "success");
+            });
+        }
+
+        async function handleArchiveArticle(articleId) {
+            const articleToUpdate = articles.find(a => a.id === articleId);
+            if (!articleToUpdate) return;
+
+            const newArchivedState = !articleToUpdate.isArchived;
+            const articleRef = doc(db, `users/${userId}/articles`, articleId);
+            try {
+                await updateDoc(articleRef, { isArchived: newArchivedState });
+                showToast(newArchivedState ? "Article archived." : "Article unarchived.");
+            } catch (error) {
+                console.error("Error updating archive status:", error);
+                showToast("Could not update article.", "error");
+            }
+        }
+
+        async function handleAddTag(articleId, tagInput) {
+            const newTag = tagInput.value.trim();
+            if (!newTag || !userId) return;
+
+            const articleRef = doc(db, `users/${userId}/articles`, articleId);
+            try {
+                await updateDoc(articleRef, {
+                    tags: arrayUnion(newTag)
+                });
+                tagInput.value = '';
+                showToast("Tag added!");
+            } catch (error) {
+                console.error("Error adding tag:", error);
+                showToast("Failed to add tag.", "error");
+            }
+        }
+
+        async function handleDeleteTag(articleId, tagToDelete) {
+            if (!userId) return;
+            const articleRef = doc(db, `users/${userId}/articles`, articleId);
+            try {
+                await updateDoc(articleRef, {
+                    tags: arrayRemove(tagToDelete)
+                });
+                showToast("Tag removed.");
+            } catch (error) {
+                console.error("Error deleting tag:", error);
+                showToast("Failed to remove tag.", "error");
+            }
+        }
+
+        // --- Collection Functions ---
+        async function handleAddCollection() {
+            const nameInput = document.getElementById('collection-name-input');
+            const name = nameInput.value.trim();
+            if (!name) return;
+
+            try {
+                await addDoc(collection(db, `users/${userId}/collections`), {
+                    name,
+                    createdAt: serverTimestamp()
+                });
+                nameInput.value = '';
+                showToast("Collection created!");
+            } catch (e) {
+                console.error("Error creating collection", e);
+                showToast("Failed to create collection.", "error");
+            }
+        }
+
+        async function deleteCollection(collectionId) {
+            showConfirmModal("Delete this collection?", "This will not delete the articles inside it.", async () => {
+                const batch = writeBatch(db);
+
+                const articlesToUpdate = articles.filter(a => a.collectionId === collectionId);
+                articlesToUpdate.forEach(article => {
+                    const articleRef = doc(db, `users/${userId}/articles`, article.id);
+                    batch.update(articleRef, { collectionId: null });
+                });
+
+                const collectionRef = doc(db, `users/${userId}/collections`, collectionId);
+                batch.delete(collectionRef);
+
+                await batch.commit();
+                showToast("Collection deleted.");
+            });
+        }
+
+        function openAddToCollectionModal(articleId) {
+            articleToAddToCollection = articleId;
+            const select = document.getElementById('collection-select');
+            select.innerHTML = collections.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            addToCollectionModal.style.display = 'flex';
+        }
+
+        function closeAddToCollectionModal() {
+            articleToAddToCollection = null;
+            addToCollectionModal.style.display = 'none';
+        }
+
+        async function handleSaveToCollection() {
+            const collectionId = document.getElementById('collection-select').value;
+            if (!articleToAddToCollection || !collectionId) return;
+
+            const articleRef = doc(db, `users/${userId}/articles`, articleToAddToCollection);
+            await updateDoc(articleRef, { collectionId });
+
+            showToast("Article added to collection!");
+            closeAddToCollectionModal();
+        }
+
+
+        function exportArticleHighlights() {
+            if (!currentArticle) return;
+
+            const articleHighlights = highlights.filter(h => h.articleId === currentArticle.id);
+            if (articleHighlights.length === 0) {
+                showToast("No highlights to export for this article.", "error");
+                return;
+            }
+
+            let markdownContent = `# Highlights for: ${currentArticle.title}\n\n`;
+            markdownContent += `Source: ${currentArticle.url}\n\n---\n\n`;
+
+            articleHighlights.forEach(h => {
+                markdownContent += `> ${h.text}\n\n`;
+                if (h.note) {
+                    markdownContent += `**Note:** ${h.note}\n\n`;
+                }
+                markdownContent += `---\n\n`;
+            });
+
+            const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentArticle.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_highlights.md`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Highlights exported!");
+        }
+
+
+        // --- Enhanced Highlighting Logic ---
+        function applyHighlightsToReader() {
+            const articleContent = document.getElementById('article-content');
+            if (!articleContent || !currentArticle) return;
+
+            const existingHighlights = articleContent.querySelectorAll('mark');
+            existingHighlights.forEach(mark => {
+                const parent = mark.parentNode;
+                while (mark.firstChild) {
+                    parent.insertBefore(mark.firstChild, mark);
+                }
+                parent.removeChild(mark);
+                parent.normalize();
+            });
+
+            const articleHighlights = highlights.filter(h => h.articleId === currentArticle.id);
+            if (articleHighlights.length === 0) return;
+
+            articleHighlights.sort((a, b) => b.text.length - a.text.length);
+
+            articleHighlights.forEach(h => {
+                highlightTextInElement(articleContent, h.text, h.color, h.highlightId);
+            });
+        }
+
+        function highlightTextInElement(element, searchText, color, highlightId) {
+            if (!element || !searchText) return;
+
+            const walker = document.createTreeWalker(
+                element,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+
+            const textNodes = [];
+            let node;
+            while (node = walker.nextNode()) {
+                textNodes.push(node);
+            }
+
+            for (const textNode of textNodes) {
+                const text = textNode.textContent;
+                const index = text.indexOf(searchText);
+
+                if (index !== -1 && !textNode.parentElement.closest('mark')) {
+                    const before = text.substring(0, index);
+                    const highlighted = text.substring(index, index + searchText.length);
+                    const after = text.substring(index + searchText.length);
+
+                    const beforeNode = document.createTextNode(before);
+                    const mark = document.createElement('mark');
+                    mark.className = `highlight-${color}`;
+                    mark.dataset.highlightId = highlightId;
+                    mark.textContent = highlighted;
+                    const afterNode = document.createTextNode(after);
+
+                    const parent = textNode.parentNode;
+                    parent.insertBefore(beforeNode, textNode);
+                    parent.insertBefore(mark, textNode);
+                    parent.insertBefore(afterNode, textNode);
+                    parent.removeChild(textNode);
+                    break;
+                }
+            }
+        }
+
+        function setupTextSelectionListeners() {
+            const articleContent = document.getElementById('article-content');
+            if (!articleContent) return;
+
+            articleContent.removeEventListener('mouseup', handleTextSelection);
+            articleContent.removeEventListener('touchend', handleTextSelection);
+            articleContent.removeEventListener('click', handleMarkClick);
+
+            articleContent.addEventListener('mouseup', handleTextSelection);
+            articleContent.addEventListener('touchend', handleTextSelection);
+            articleContent.addEventListener('click', handleMarkClick);
+        }
+
+        function handleTextSelection(e) {
+            if (e.target.closest('#highlighter-toolbar')) {
+                return;
+            }
+
+            setTimeout(() => {
+                const selection = window.getSelection();
+                const articleContent = document.getElementById('article-content');
+
+                if (!selection || !articleContent) return;
+
+                const hasSelection = !selection.isCollapsed &&
+                    selection.rangeCount > 0 &&
+                    articleContent.contains(selection.anchorNode) &&
+                    selection.toString().trim().length > 0;
+
+                if (hasSelection) {
+                    currentSelection = selection.getRangeAt(0).cloneRange();
+                    showHighlighterToolbar(selection.getRangeAt(0));
+                } else if (!e.target.closest('mark[data-highlight-id]')) {
+                    hideHighlighterToolbar();
+                }
+            }, 50);
+        }
+
+
+        function handleMarkClick(e) {
+            const clickedHighlight = e.target.closest('mark[data-highlight-id]');
+            if (clickedHighlight) {
+                e.stopPropagation();
+                currentHighlightId = clickedHighlight.dataset.highlightId;
+                showHighlighterToolbar(clickedHighlight.getBoundingClientRect(), true);
+            }
+        }
+
+        function showHighlighterToolbar(rect, isEditingHighlight = false) {
+            const toolbar = highlighterToolbar;
+            const deleteBtn = document.getElementById('delete-highlight-btn');
+            const shareBtn = document.getElementById('share-highlight-btn');
+
+            deleteBtn.style.display = isEditingHighlight ? 'block' : 'none';
+            shareBtn.style.display = isEditingHighlight ? 'block' : 'none';
+
+            positionToolbar(rect);
+
+            toolbar.style.display = 'flex';
+        }
+
+        function hideHighlighterToolbar() {
+            highlighterToolbar.style.display = 'none';
+            currentSelection = null;
+            currentHighlightId = null;
+        }
+
+        function positionToolbar(rect) {
+            const toolbar = highlighterToolbar;
+            const toolbarRect = toolbar.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+
+            let selectionRect;
+            if (typeof rect.getBoundingClientRect === 'function') {
+                selectionRect = rect.getBoundingClientRect();
+            } else {
+                selectionRect = rect;
+            }
+
+            let left = selectionRect.left + (selectionRect.width / 2) - (toolbarRect.width / 2);
+            let top = selectionRect.top - toolbarRect.height - 10;
+
+            if (top < 10) {
+                top = selectionRect.bottom + 10;
+            }
+
+            if (left < 10) {
+                left = 10;
+            }
+            else if (left + toolbarRect.width > viewportWidth - 10) {
+                left = viewportWidth - toolbarRect.width - 10;
+            }
+
+            toolbar.style.left = `${left}px`;
+            toolbar.style.top = `${top}px`;
+        }
+
+
+        async function applyHighlight(color) {
+            if (!currentSelection || !userId || !currentArticle) return;
+
+            const selectedText = currentSelection.toString().trim();
+            if (!selectedText) return;
+
+            const highlightId = `highlight-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+            try {
+                await addDoc(collection(db, `users/${userId}/highlights`), {
+                    articleId: currentArticle.id,
+                    highlightId,
+                    text: selectedText,
+                    color,
+                    note: '',
+                    createdAt: serverTimestamp()
+                });
+
+                window.getSelection().removeAllRanges();
+                hideHighlighterToolbar();
+
+            } catch (error) {
+                console.error("Error saving highlight:", error);
+                alert("Failed to save highlight. Please try again.");
+            }
+        }
+
+        async function deleteHighlight() {
+            if (!currentHighlightId || !userId) return;
+
+            showConfirmModal("Delete this highlight?", "", async () => {
+                try {
+                    const highlightToDelete = highlights.find(h => h.highlightId === currentHighlightId);
+                    if (highlightToDelete) {
+                        await deleteDoc(doc(db, `users/${userId}/highlights`, highlightToDelete.id));
+                    }
+                    hideHighlighterToolbar();
+                    showToast("Highlight deleted.");
+                } catch (error) {
+                    console.error("Error deleting highlight:", error);
+                    showToast("Failed to delete highlight.", "error");
+                }
+            });
+        }
+
+        async function shareHighlight() {
+            if (!currentHighlightId) return;
+            const highlight = highlights.find(h => h.highlightId === currentHighlightId);
+            const article = articles.find(a => a.id === highlight.articleId);
+            if (!highlight || !article) return;
+
+            const shareText = `"${highlight.text}" - From ${article.title}`;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: `Highlight from ${article.title}`,
+                        text: shareText,
+                        url: article.url
+                    });
+                } catch (error) {
+                    console.error('Error sharing:', error);
+                }
+            } else {
+                try {
+                    await navigator.clipboard.writeText(shareText);
+                    showToast("Highlight copied to clipboard!");
+                } catch (err) {
+                    console.error('Failed to copy: ', err);
+                    showToast("Failed to copy highlight.", "error");
+                }
+            }
+            hideHighlighterToolbar();
+        }
+
+
+        // --- Note Handling ---
+        function openNoteModal() {
+            const highlight = highlights.find(h => h.highlightId === currentHighlightId);
+            document.getElementById('note-textarea').value = highlight ? (highlight.note || '') : '';
+            noteModal.style.display = 'flex';
+            hideHighlighterToolbar();
+
+            setTimeout(() => {
+                document.getElementById('note-textarea').focus();
+            }, 100);
+        }
+
+        async function saveNote() {
+            if (!userId) return;
+
+            const noteText = document.getElementById('note-textarea').value.trim();
+
+            try {
+                let highlight = highlights.find(h => h.highlightId === currentHighlightId);
+
+                if (highlight) {
+                    const highlightRef = doc(db, `users/${userId}/highlights`, highlight.id);
+                    await updateDoc(highlightRef, { note: noteText });
+                } else if (currentSelection) {
+                    const color = 'yellow';
+                    const selectedText = currentSelection.toString().trim();
+                    const highlightId = `highlight-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+                    await addDoc(collection(db, `users/${userId}/highlights`), {
+                        articleId: currentArticle.id,
+                        highlightId,
+                        text: selectedText,
+                        color,
+                        note: noteText,
+                        createdAt: serverTimestamp()
+                    });
+
+                    window.getSelection().removeAllRanges();
+                }
+
+                closeNoteModal();
+            } catch (error) {
+                console.error("Error saving note:", error);
+                alert("Failed to save note. Please try again.");
+            }
+        }
+
+        function closeNoteModal() {
+            noteModal.style.display = 'none';
+            currentHighlightId = null;
+            currentSelection = null;
+            document.getElementById('note-textarea').value = '';
+        }
+
+        // --- Settings Popover Functions ---
+        function toggleSettingsPopover() {
+            const isHidden = settingsPopover.classList.contains('hidden');
+            if (isHidden) {
+                updateSettingsUI();
+                settingsPopover.classList.remove('hidden', 'opacity-0', 'scale-95');
+                settingsPopover.classList.add('opacity-100', 'scale-100');
+            } else {
+                settingsPopover.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    settingsPopover.classList.add('hidden');
+                    saveSettings();
+                }, 200);
+            }
+        }
+
+        // --- Confirmation Modal ---
+        function showConfirmModal(title, text, onConfirm) {
+            document.getElementById('confirm-modal-title').textContent = title;
+            document.getElementById('confirm-modal-text').textContent = text;
+            confirmCallback = onConfirm;
+            confirmModal.style.display = 'flex';
+        }
+
+        function hideConfirmModal() {
+            confirmModal.style.display = 'none';
+            confirmCallback = null;
+        }
+
+
+        // --- UI & Theme ---
+        function setupTheme() {
+            const lightIcon = document.getElementById('theme-icon-light');
+            const darkIcon = document.getElementById('theme-icon-dark');
+            const isDark = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+            document.documentElement.classList.toggle('dark', isDark);
+            lightIcon.style.display = isDark ? 'none' : 'block';
+            darkIcon.style.display = isDark ? 'block' : 'none';
+
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                const isCurrentlyDark = document.documentElement.classList.toggle('dark');
+                localStorage.theme = isCurrentlyDark ? 'dark' : 'light';
+                lightIcon.style.display = isCurrentlyDark ? 'none' : 'block';
+                darkIcon.style.display = isCurrentlyDark ? 'block' : 'none';
+            });
+        }
+
+        function updateReadingProgress() {
+            const backToTopBtn = document.getElementById('back-to-top-btn');
+            if (readerView.style.display !== 'block') {
+                progressBar.style.width = '0%';
+                backToTopBtn.classList.remove('show');
+                return;
+            }
+
+            const content = document.getElementById('article-content');
+            if (!content) return;
+
+            const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollTop = window.scrollY;
+
+            if (scrollTop > window.innerHeight / 2) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+
+            if (scrollableHeight <= 0) {
+                progressBar.style.width = '100%';
+                return;
+            }
+
+            const progress = (scrollTop / scrollableHeight) * 100;
+            progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+        }
+
+        async function saveReadingPosition() {
+            if (!currentArticle || !userId) return;
+            const articleRef = doc(db, `users/${userId}/articles`, currentArticle.id);
+            try {
+                await updateDoc(articleRef, { lastReadPosition: window.scrollY });
+            } catch (error) {
+                console.error("Error saving reading position:", error);
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            if (toastTimeout) clearTimeout(toastTimeout);
+
+            toast.textContent = message;
+            toast.className = type === 'success' ? 'success' : 'error';
+            toast.classList.add('show');
+
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- In-Article Search ---
+        function handleInArticleSearch() {
+            clearInArticleSearch();
+            const searchTerm = document.getElementById('in-article-search-input').value;
+            const content = document.getElementById('article-content');
+            if (!searchTerm || !content) {
+                document.getElementById('in-article-search-results-count').textContent = '';
+                return;
+            }
+
+            const regex = new RegExp(searchTerm, 'gi');
+            const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
+            let node;
+            while (node = walker.nextNode()) {
+                const matches = node.nodeValue.match(regex);
+                if (matches) {
+                    const span = document.createElement('span');
+                    span.innerHTML = node.nodeValue.replace(regex, match => `<mark class="in-article-search-highlight">${match}</mark>`);
+                    node.parentNode.replaceChild(span, node);
+                }
+            }
+            inArticleSearchResults = Array.from(content.querySelectorAll('.in-article-search-highlight'));
+            currentSearchResultIndex = -1;
+            updateSearchResultCount();
+            if (inArticleSearchResults.length > 0) {
+                navigateToSearchResult(0);
+            }
+        }
+
+        function navigateToSearchResult(index) {
+            if (index < 0 || index >= inArticleSearchResults.length) return;
+
+            if (currentSearchResultIndex !== -1) {
+                inArticleSearchResults[currentSearchResultIndex].classList.remove('current');
+            }
+
+            currentSearchResultIndex = index;
+            const currentResult = inArticleSearchResults[currentSearchResultIndex];
+            currentResult.classList.add('current');
+            currentResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            updateSearchResultCount();
+        }
+
+        function updateSearchResultCount() {
+            const countEl = document.getElementById('in-article-search-results-count');
+            if (inArticleSearchResults.length > 0) {
+                countEl.textContent = `${currentSearchResultIndex + 1} / ${inArticleSearchResults.length}`;
+            } else {
+                countEl.textContent = '0 / 0';
+            }
+        }
+
+        function clearInArticleSearch() {
+            const content = document.getElementById('article-content');
+            if (!content) return;
+            const highlights = content.querySelectorAll('mark.in-article-search-highlight');
+            highlights.forEach(h => {
+                const parent = h.parentNode;
+                parent.replaceWith(...parent.childNodes);
+                parent.normalize();
+            });
+            inArticleSearchResults = [];
+            currentSearchResultIndex = -1;
+            const searchInput = document.getElementById('in-article-search-input');
+            if (searchInput) {
+                searchInput.value = '';
+                document.getElementById('in-article-search-results-count').textContent = '';
+            }
+        }
+
+        // --- Text-to-Speech (TTS) Functions ---
+        function playTTS() {
+            if (speechSynthesis.speaking && speechSynthesis.paused) {
+                speechSynthesis.resume();
+                updateTTSControls(true);
+                return;
+            }
+
+            const articleContent = document.getElementById('article-content');
+            if (!articleContent) return;
+
+            const text = articleContent.innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+            ttsSentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+            currentTtsSentenceIndex = 0;
+
+            speakNextSentence();
+            updateTTSControls(true);
+        }
+
+        function speakNextSentence() {
+            if (currentTtsSentenceIndex >= ttsSentences.length) {
+                stopTTS();
+                return;
+            }
+
+            ttsUtterance = new SpeechSynthesisUtterance(ttsSentences[currentTtsSentenceIndex]);
+            ttsUtterance.onend = () => {
+                currentTtsSentenceIndex++;
+                speakNextSentence();
+            };
+
+            ttsUtterance.onboundary = (event) => {
+                highlightSpokenText(event);
+            };
+
+            speechSynthesis.speak(ttsUtterance);
+        }
+
+        function highlightSpokenText(event) {
+            const articleContent = document.getElementById('article-content');
+            if (!articleContent) return;
+
+            const existingHighlight = articleContent.querySelector('.tts-speaking');
+            if (existingHighlight) {
+                const parent = existingHighlight.parentNode;
+                parent.replaceWith(...parent.childNodes);
+                parent.normalize();
+            }
+
+            const sentence = ttsSentences[currentTtsSentenceIndex];
+            const walker = document.createTreeWalker(articleContent, NodeFilter.SHOW_TEXT);
+            let node;
+            while (node = walker.nextNode()) {
+                const index = node.nodeValue.indexOf(sentence);
+                if (index > -1) {
+                    const range = document.createRange();
+                    range.setStart(node, index);
+                    range.setEnd(node, index + sentence.length);
+                    const span = document.createElement('span');
+                    span.className = 'tts-speaking';
+                    range.surroundContents(span);
+                    span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    break;
+                }
+            }
+        }
+
+
+        function pauseTTS() {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.pause();
+                updateTTSControls(false, true);
+            }
+        }
+
+        function stopTTS() {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+            }
+            updateTTSControls(false);
+
+            const existingHighlight = document.querySelector('.tts-speaking');
+            if (existingHighlight) {
+                const parent = existingHighlight.parentNode;
+                parent.replaceWith(...parent.childNodes);
+                parent.normalize();
+            }
+        }
+
+        function updateTTSControls(isPlaying, isPaused = false) {
+            const playBtn = document.getElementById('tts-play-btn');
+            const pauseBtn = document.getElementById('tts-pause-btn');
+            const stopBtn = document.getElementById('tts-stop-btn');
+
+            if (!playBtn) return;
+
+            if (isPlaying) {
+                playBtn.style.display = 'none';
+                pauseBtn.style.display = 'block';
+                stopBtn.style.display = 'block';
+            } else if (isPaused) {
+                playBtn.style.display = 'block';
+                pauseBtn.style.display = 'none';
+                stopBtn.style.display = 'block';
+            } else {
+                playBtn.style.display = 'block';
+                pauseBtn.style.display = 'none';
+                stopBtn.style.display = 'none';
+            }
+        }
+
+        // --- Tagging Improvement Functions ---
+        function showTagSuggestions(inputElement) {
+            const existingSuggestions = inputElement.parentElement.querySelector('.tag-suggestions');
+            if (existingSuggestions) existingSuggestions.remove();
+
+            const uniqueTags = [...new Set(articles.flatMap(a => a.tags || []))];
+            const inputValue = inputElement.value.toLowerCase();
+            const filteredTags = uniqueTags.filter(tag => tag.toLowerCase().includes(inputValue) && tag.toLowerCase() !== inputValue);
+
+            if (filteredTags.length === 0) return;
+
+            const suggestionsContainer = document.createElement('div');
+            suggestionsContainer.className = 'tag-suggestions';
+            suggestionsContainer.innerHTML = filteredTags.map(tag => `<div class="tag-suggestion-item" data-tag="${tag}">${tag}</div>`).join('');
+
+            inputElement.parentElement.appendChild(suggestionsContainer);
+        }
+
+        function hideTagSuggestions(inputElement) {
+            const suggestions = inputElement.parentElement.querySelector('.tag-suggestions');
+            if (suggestions) {
+                suggestions.remove();
+            }
+        }
+
+
+        // --- Event Listeners Setup ---
+        function setupEventListeners() {
+            // Authentication
+            document.getElementById('sign-in-btn').addEventListener('click', handleSignIn);
+            document.getElementById('sign-out-btn').addEventListener('click', handleSignOut);
+
+            // Navigation
+            homeButton.addEventListener('click', () => {
+                currentCollectionId = null;
+                showView('library');
+            });
+            libraryBtn.addEventListener('click', () => {
+                currentCollectionId = null;
+                showView('library');
+            });
+            collectionsBtn.addEventListener('click', () => showView('collections'));
+            highlightsBtn.addEventListener('click', () => showView('highlights'));
+            statsBtn.addEventListener('click', () => showView('stats'));
+            document.getElementById('back-to-collections-btn').addEventListener('click', () => showView('collections'));
+
+
+            // Article management
+            addArticleBtn.addEventListener('click', handleAddArticle);
+            articleUrlInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleAddArticle();
+                }
+            });
+
+            // Collection management
+            document.getElementById('add-collection-btn').addEventListener('click', handleAddCollection);
+            document.getElementById('collection-name-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleAddCollection();
+                }
+            });
+
+            collectionGrid.addEventListener('click', e => {
+                const card = e.target.closest('.collection-card');
+                if (!card) return;
+
+                const collectionId = card.dataset.id;
+                const deleteBtn = e.target.closest('.delete-collection-btn');
+
+                if (deleteBtn) {
+                    e.stopPropagation();
+                    deleteCollection(collectionId);
+                } else {
+                    currentCollectionId = collectionId;
+                    showView('library');
+                }
+            });
+
+            document.getElementById('save-add-to-collection-btn').addEventListener('click', handleSaveToCollection);
+            document.getElementById('cancel-add-to-collection-btn').addEventListener('click', closeAddToCollectionModal);
+
+
+            // Search and sorting
+            document.getElementById('search-library-input').addEventListener('input', renderLibrary);
+            document.getElementById('sort-library-select').addEventListener('change', renderLibrary);
+            document.getElementById('search-highlights-input').addEventListener('input', renderHighlights);
+            archiveToggle.addEventListener('change', (e) => {
+                showArchived = e.target.checked;
+                renderLibrary();
+            });
+
+            // Settings
+            settingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleSettingsPopover();
+            });
+
+            document.getElementById('font-family-select').addEventListener('change', (e) => {
+                settings.fontFamily = e.target.value;
+                applySettings();
+            });
+
+            document.getElementById('font-size-range').addEventListener('input', (e) => {
+                settings.fontSize = parseInt(e.target.value);
+                applySettings();
+            });
+
+            document.getElementById('line-height-range').addEventListener('input', (e) => {
+                settings.lineHeight = parseFloat(e.target.value);
+                applySettings();
+            });
+
+            document.getElementById('max-width-range').addEventListener('input', (e) => {
+                settings.maxWidth = parseInt(e.target.value);
+                applySettings();
+            });
+
+            document.querySelectorAll('.theme-preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    settings.theme = btn.dataset.theme;
+                    updateSettingsUI();
+                    applySettings();
+                });
+            });
+
+            // Article grid event delegation
+            articleGrid.addEventListener('click', e => {
+                const card = e.target.closest('.article-card');
+                if (!card) return;
+
+                const articleId = card.dataset.id;
+                const tagEl = e.target.closest('.clickable-tag');
+                const addTagBtnEl = e.target.closest('.add-tag-btn');
+                const deleteBtnEl = e.target.closest('.delete-article-btn');
+                const addTagInputEl = e.target.closest('.add-tag-input');
+                const deleteTagBtnEl = e.target.closest('.delete-tag-btn');
+                const archiveBtnEl = e.target.closest('.archive-article-btn');
+                const addToCollectionBtn = e.target.closest('.add-to-collection-btn');
+                const suggestionItem = e.target.closest('.tag-suggestion-item');
+
+                if (deleteBtnEl) {
+                    e.stopPropagation();
+                    deleteArticle(articleId);
+                } else if (archiveBtnEl) {
+                    e.stopPropagation();
+                    handleArchiveArticle(articleId);
+                } else if (addToCollectionBtn) {
+                    e.stopPropagation();
+                    openAddToCollectionModal(articleId);
+                }
+                else if (addTagBtnEl) {
+                    e.stopPropagation();
+                    const input = card.querySelector('.add-tag-input');
+                    handleAddTag(articleId, input);
+                    hideTagSuggestions(input);
+                } else if (deleteTagBtnEl) {
+                    e.stopPropagation();
+                    const tagToDelete = deleteTagBtnEl.dataset.tagToDelete;
+                    handleDeleteTag(articleId, tagToDelete);
+                } else if (tagEl) {
+                    e.stopPropagation();
+                    const tag = tagEl.dataset.tag;
+                    document.getElementById('search-library-input').value = tag;
+                    renderLibrary();
+                } else if (suggestionItem) {
+                    e.stopPropagation();
+                    const input = card.querySelector('.add-tag-input');
+                    input.value = suggestionItem.dataset.tag;
+                    hideTagSuggestions(input);
+                    input.focus();
+                }
+                else if (addTagInputEl) {
+                    e.stopPropagation();
+                } else {
+                    currentArticle = { ...articles.find(a => a.id === articleId) };
+                    if (currentArticle) {
+                        showView('reader');
+                        renderReader();
+                    }
+                }
+            });
+
+            articleGrid.addEventListener('input', e => {
+                if (e.target.classList.contains('add-tag-input')) {
+                    showTagSuggestions(e.target);
+                }
+            });
+
+            articleGrid.addEventListener('focusout', e => {
+                if (e.target.classList.contains('add-tag-input')) {
+                    setTimeout(() => hideTagSuggestions(e.target), 150);
+                }
+            });
+
+            articleGrid.addEventListener('keydown', e => {
+                if (e.target.classList.contains('add-tag-input')) {
+                    const suggestionsContainer = e.target.parentElement.querySelector('.tag-suggestions');
+                    if (!suggestionsContainer) return;
+
+                    const items = suggestionsContainer.querySelectorAll('.tag-suggestion-item');
+                    let activeIndex = Array.from(items).findIndex(item => item.classList.contains('active'));
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (activeIndex < items.length - 1) activeIndex++;
+                        else activeIndex = 0;
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (activeIndex > 0) activeIndex--;
+                        else activeIndex = items.length - 1;
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (activeIndex > -1) {
+                            e.target.value = items[activeIndex].dataset.tag;
+                            hideTagSuggestions(e.target);
+                        } else {
+                            const card = e.target.closest('.article-card');
+                            if (card) {
+                                handleAddTag(card.dataset.id, e.target);
+                                hideTagSuggestions(e.target);
+                            }
+                        }
+                    } else if (e.key === 'Escape') {
+                        hideTagSuggestions(e.target);
+                    }
+
+                    items.forEach((item, index) => item.classList.toggle('active', index === activeIndex));
+                }
+            });
+
+
+            // Reader view events
+            readerView.addEventListener('click', e => {
+                if (e.target.closest('#back-to-library-btn')) {
+                    showView('library');
+                } else if (e.target.closest('#export-highlights-btn')) {
+                    exportArticleHighlights();
+                } else if (e.target.closest('#in-article-next-btn')) {
+                    navigateToSearchResult(currentSearchResultIndex + 1);
+                } else if (e.target.closest('#in-article-prev-btn')) {
+                    navigateToSearchResult(currentSearchResultIndex - 1);
+                } else if (e.target.closest('#in-article-close-btn')) {
+                    clearInArticleSearch();
+                } else if (e.target.closest('#tts-play-btn')) {
+                    playTTS();
+                } else if (e.target.closest('#tts-pause-btn')) {
+                    pauseTTS();
+                } else if (e.target.closest('#tts-stop-btn')) {
+                    stopTTS();
+                }
+            });
+
+            readerView.addEventListener('input', e => {
+                if (e.target.id === 'in-article-search-input') {
+                    handleInArticleSearch();
+                }
+            });
+
+
+            // Highlights view navigation
+            highlightsFeed.addEventListener('click', e => {
+                const link = e.target.closest('.highlight-source-link');
+                if (link) {
+                    e.preventDefault();
+                    currentArticle = { ...articles.find(a => a.id === link.dataset.articleId) };
+                    if (currentArticle) {
+                        showView('reader');
+                        renderReader();
+                    }
+                }
+            });
+
+            highlightColorFilters.addEventListener('click', e => {
+                const btn = e.target.closest('.color-filter-btn');
+                if (!btn) return;
+
+                const color = btn.dataset.color;
+
+                if (btn.classList.contains('active')) {
+                    activeHighlightColorFilter = null;
+                    btn.classList.remove('active');
+                } else {
+                    highlightColorFilters.querySelector('.active')?.classList.remove('active');
+                    activeHighlightColorFilter = color;
+                    btn.classList.add('active');
+                }
+                renderHighlights();
+            });
+
+
+            highlighterToolbar.addEventListener('click', async (e) => {
+                e.stopPropagation();
+
+                const colorBtn = e.target.closest('.color-btn');
+                if (colorBtn) {
+                    const newColor = colorBtn.dataset.color;
+                    if (currentHighlightId) {
+                        const highlightToUpdate = highlights.find(h => h.highlightId === currentHighlightId);
+                        if (highlightToUpdate) {
+                            try {
+                                await updateDoc(doc(db, `users/${userId}/highlights`, highlightToUpdate.id), {
+                                    color: newColor
+                                });
+                                hideHighlighterToolbar();
+                            } catch (error) {
+                                console.error("Error updating highlight color:", error);
+                                alert("Failed to update highlight color. Please try again.");
+                            }
+                        }
+                    } else {
+                        await applyHighlight(newColor);
+                    }
+                    return;
+                }
+
+                if (e.target.closest('#add-note-btn')) {
+                    openNoteModal();
+                } else if (e.target.closest('#delete-highlight-btn')) {
+                    await deleteHighlight();
+                } else if (e.target.closest('#share-highlight-btn')) {
+                    await shareHighlight();
+                }
+            });
+
+            // Note modal handlers
+            document.getElementById('save-note-btn').addEventListener('click', saveNote);
+            document.getElementById('cancel-note-btn').addEventListener('click', closeNoteModal);
+
+            // Confirmation Modal Handlers
+            document.getElementById('confirm-btn').addEventListener('click', () => {
+                if (confirmCallback) {
+                    confirmCallback();
+                }
+                hideConfirmModal();
+            });
+            document.getElementById('cancel-confirm-btn').addEventListener('click', hideConfirmModal);
+
+
+            // Global click handler to close popover
+            document.addEventListener('click', (e) => {
+                if (!settingsPopover.classList.contains('hidden') && !e.target.closest('#settings-popover') && !e.target.closest('#settings-btn')) {
+                    toggleSettingsPopover();
+                }
+            });
+
+
+            confirmModal.addEventListener('click', (e) => {
+                if (e.target === confirmModal) {
+                    hideConfirmModal();
+                }
+            });
+
+
+            settingsPopover.addEventListener('click', (e) => {
+                if (e.target.closest('.theme-preset-btn') || e.target.closest('select')) {
+                } else {
+                    e.stopPropagation();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (noteModal.style.display === 'flex') {
+                        closeNoteModal();
+                    } else if (!settingsPopover.classList.contains('hidden')) {
+                        toggleSettingsPopover();
+                    } else if (confirmModal.style.display === 'flex') {
+                        hideConfirmModal();
+                    }
+                }
+            });
+
+            window.addEventListener('scroll', () => {
+                updateReadingProgress();
+
+                if (readerView.style.display === 'block') {
+                    if (readingPositionSaveTimeout) clearTimeout(readingPositionSaveTimeout);
+                    readingPositionSaveTimeout = setTimeout(saveReadingPosition, 2000);
+                }
+            });
+            window.addEventListener('resize', updateReadingProgress);
+
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // --- App Entry Point ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeAppCore();
+            setupTheme();
+            setupEventListeners();
+            lucide.createIcons();
+            showView('library');
+        });
+    </script>
+
+    <!-- Additional CSS for theme presets -->
+    <style>
+        .sepia-theme {
+            background-color: #f7f5f3 !important;
+            color: #5c4b37 !important;
+        }
+
+        .dark.sepia-theme {
+            background-color: #2c2419 !important;
+            color: #d4c4a8 !important;
+        }
+
+        .sepia-theme .article-content {
+            color: #5c4b37 !important;
+        }
+
+        .dark .sepia-theme .article-content {
+            color: #d4c4a8 !important;
+        }
+
+        .sepia-theme h1,
+        .sepia-theme h2,
+        .sepia-theme h3,
+        .sepia-theme h4 {
+            color: #3d2f1f !important;
+        }
+
+        .dark .sepia-theme h1,
+        .dark .sepia-theme h2,
+        .dark .sepia-theme h3,
+        .dark .sepia-theme h4 {
+            color: #e8d5b7 !important;
+        }
+
+        .dark-theme {
+            background-color: #1a1a1a !important;
+            color: #e5e5e5 !important;
+        }
+
+        .dark-theme .article-content {
+            color: #e5e5e5 !important;
+        }
+
+        .dark-theme h1,
+        .dark-theme h2,
+        .dark-theme h3,
+        .dark-theme h4 {
+            color: #ffffff !important;
+        }
+    </style>
+</body>
+
+</html>

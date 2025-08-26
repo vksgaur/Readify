@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reader Highlighter</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn/tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link
         href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&family=Roboto:wght@400;500&family=Lato:wght@400;700&display=swap"
@@ -177,8 +177,30 @@
         }
 
         .article-card-actions {
-            transition: opacity 0.2s ease-in-out;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
         }
+        .article-card:hover .article-card-actions {
+            transform: translateX(0);
+        }
+        
+        .article-card-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #e0e7ff; /* indigo-100 */
+        }
+        .dark .article-card-progress-bar {
+            background-color: #374151; /* gray-700 */
+        }
+        .article-card-progress {
+            height: 100%;
+            background-color: #4f46e5; /* indigo-600 */
+            transition: width 0.3s ease-out;
+        }
+
 
         .highlight-yellow {
             background-color: rgba(255, 229, 0, 0.5);
@@ -1585,29 +1607,32 @@
                     const imageHTML = article.imageUrl
                         ? `<img src="${article.imageUrl}" alt="" class="article-card-image" onerror="this.style.display='none'">`
                         : '';
+                    
+                    const progress = (article.lastReadPosition && article.totalContentHeight) ? (article.lastReadPosition / (article.totalContentHeight - window.innerHeight)) * 100 : 0;
+
 
                     return `
-                    <div class="article-card group flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" data-id="${article.id}">
+                    <div class="article-card relative group flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" data-id="${article.id}">
                         ${imageHTML}
                         <div class="p-5 flex-grow flex flex-col">
                             <div class="flex justify-between items-center mb-1">
-                                <p class="text-sm text-gray-500 dark:text-gray-400 truncate">${article.source}</p>
-                                ${article.readTime ? `<p class="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">${article.readTime} min read</p>` : ''}
+                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">${article.source}</p>
+                                ${article.readTime ? `<p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">${article.readTime} min read</p>` : ''}
                             </div>
-                            <h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">${titleHTML}</h3>
+                            <h3 class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">${titleHTML}</h3>
                             <div class="flex-grow"></div>
                             <div class="flex flex-wrap gap-2 mt-3">
                                 ${tagsHTML}
                             </div>
                         </div>
-                        <div class="bg-gray-50 dark:bg-gray-700 px-5 py-3 flex justify-between items-center">
+                        <div class="bg-gray-50 dark:bg-gray-700/50 px-5 py-3 flex justify-between items-center overflow-hidden">
                              <div class="relative flex items-center gap-2">
                                 <input type="text" placeholder="Add tag..." class="add-tag-input text-sm p-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 w-24">
                                 <button class="add-tag-btn text-blue-500 hover:text-blue-700 dark:hover:text-blue-400" data-id="${article.id}">
                                     <i data-lucide="plus-circle" class="h-5 w-5"></i>
                                 </button>
                             </div>
-                            <div class="flex items-center gap-2 article-card-actions opacity-0 group-hover:opacity-100">
+                            <div class="flex items-center gap-2 article-card-actions">
                                 <button class="add-to-collection-btn text-gray-500 hover:text-gray-700 dark:hover:text-gray-400" data-id="${article.id}" title="Add to Collection">
                                     <i data-lucide="folder-plus" class="h-5 w-5"></i>
                                 </button>
@@ -1618,6 +1643,9 @@
                                     <i data-lucide="trash-2" class="h-5 w-5"></i>
                                 </button>
                             </div>
+                        </div>
+                        <div class="article-card-progress-bar">
+                           <div class="article-card-progress" style="width: ${Math.min(100, progress)}%;"></div>
                         </div>
                     </div>
                 `}).join('');
@@ -1853,7 +1881,8 @@
                 tags: [],
                 readTime: readTime,
                 isArchived: false,
-                lastReadPosition: 0
+                lastReadPosition: 0,
+                totalContentHeight: 0,
             };
         }
 
@@ -2406,8 +2435,14 @@
         async function saveReadingPosition() {
             if (!currentArticle || !userId) return;
             const articleRef = doc(db, `users/${userId}/articles`, currentArticle.id);
+            const readerContent = document.getElementById('reader-view-content');
+            if (!readerContent) return;
+            
             try {
-                await updateDoc(articleRef, { lastReadPosition: window.scrollY });
+                await updateDoc(articleRef, { 
+                    lastReadPosition: window.scrollY,
+                    totalContentHeight: readerContent.scrollHeight 
+                });
             } catch (error) {
                 console.error("Error saving reading position:", error);
             }

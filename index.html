@@ -23,6 +23,69 @@
             font-family: 'Inter', sans-serif;
         }
 
+        /* --- Fluid Animations & Micro-interactions --- */
+        .modal-container {
+            transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+        }
+
+        .modal-panel {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .modal-container:not(.open) {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .modal-container:not(.open) .modal-panel {
+            transform: scale(0.95) translateY(10px);
+        }
+
+        @keyframes fade-and-slide-out {
+            from {
+                opacity: 1;
+                transform: scale(1);
+                max-height: 500px;
+            }
+
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+                max-height: 0;
+                padding: 0;
+                margin: 0;
+                border: none;
+            }
+        }
+
+        .archiving-out {
+            animation: fade-and-slide-out 0.3s ease-out forwards;
+            overflow: hidden;
+        }
+
+        /* --- Immersive Focus Mode --- */
+        body.focus-mode #app>header,
+        body.focus-mode #progress-bar,
+        body.focus-mode #reader-view-header {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        body.focus-mode #reader-view-content {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            box-shadow: none;
+            border-radius: 0;
+        }
+
+        #app>header,
+        #progress-bar,
+        #reader-view-header,
+        #reader-view-content {
+            transition: opacity 0.3s ease-in-out, padding 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-radius 0.3s ease-in-out;
+        }
+
+
         /* --- Improved Button Interactivity --- */
         .btn-interactive {
             transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, filter 0.15s ease-out;
@@ -38,7 +101,7 @@
         }
 
         .btn-interactive:active {
-            transform: translateY(0px);
+            transform: translateY(1px) scale(0.98);
             filter: brightness(0.95);
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
@@ -879,8 +942,9 @@
     </div>
 
     <!-- Note Modal -->
-    <div id="note-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
+    <div id="note-modal"
+        class="modal-container hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="modal-panel bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
             <h3 class="text-lg font-semibold mb-4">Add a Note</h3>
             <textarea id="note-textarea" rows="4"
                 class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -896,8 +960,8 @@
 
     <!-- Confirmation Modal -->
     <div id="confirm-modal"
-        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
+        class="modal-container hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="modal-panel bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
             <h3 id="confirm-modal-title" class="text-lg font-semibold mb-4">Are you sure?</h3>
             <p id="confirm-modal-text" class="text-gray-600 dark:text-gray-300 mb-6">This action cannot be undone.</p>
             <div class="mt-4 flex justify-end space-x-3">
@@ -911,8 +975,8 @@
 
     <!-- Add to Collection Modal -->
     <div id="add-to-collection-modal"
-        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
+        class="modal-container hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="modal-panel bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
             <h3 class="text-lg font-semibold mb-4">Add to Collection</h3>
             <select id="collection-select"
                 class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 mb-4">
@@ -1512,12 +1576,15 @@
             `;
 
             readerView.innerHTML = `
-                <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 sm:p-10 rounded-lg shadow-lg">
-                    <div class="flex justify-between items-center mb-6">
+                <div id="reader-view-content" class="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 sm:p-10 rounded-lg shadow-lg">
+                    <div id="reader-view-header" class="flex justify-between items-center mb-6">
                         <button id="back-to-library-btn" class="flex items-center text-blue-600 dark:text-blue-400 hover:underline">
                             <i data-lucide="arrow-left" class="h-4 w-4 mr-2"></i> Back to ${currentCollectionId ? 'Collection' : 'Library'}
                         </button>
                         <div class="flex items-center gap-4">
+                             <button id="focus-mode-btn" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Focus Mode">
+                                <i data-lucide="maximize" class="h-5 w-5"></i>
+                             </button>
                              <div id="tts-controls" class="flex items-center gap-2">
                                 <button id="tts-play-btn" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><i data-lucide="play-circle" class="h-5 w-5"></i></button>
                                 <button id="tts-pause-btn" class="hidden p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><i data-lucide="pause-circle" class="h-5 w-5"></i></button>
@@ -1709,19 +1776,24 @@
             });
         }
 
-        async function handleArchiveArticle(articleId) {
+        async function handleArchiveArticle(articleId, cardElement) {
             const articleToUpdate = articles.find(a => a.id === articleId);
             if (!articleToUpdate) return;
 
-            const newArchivedState = !articleToUpdate.isArchived;
-            const articleRef = doc(db, `users/${userId}/articles`, articleId);
-            try {
-                await updateDoc(articleRef, { isArchived: newArchivedState });
-                showToast(newArchivedState ? "Article archived." : "Article unarchived.");
-            } catch (error) {
-                console.error("Error updating archive status:", error);
-                showToast("Could not update article.", "error");
-            }
+            cardElement.classList.add('archiving-out');
+
+            cardElement.addEventListener('animationend', async () => {
+                const newArchivedState = !articleToUpdate.isArchived;
+                const articleRef = doc(db, `users/${userId}/articles`, articleId);
+                try {
+                    await updateDoc(articleRef, { isArchived: newArchivedState });
+                    showToast(newArchivedState ? "Article archived." : "Article unarchived.");
+                } catch (error) {
+                    console.error("Error updating archive status:", error);
+                    showToast("Could not update article.", "error");
+                    cardElement.classList.remove('archiving-out'); // Revert animation on error
+                }
+            }, { once: true });
         }
 
         async function handleAddTag(articleId, tagInput) {
@@ -1796,12 +1868,17 @@
             articleToAddToCollection = articleId;
             const select = document.getElementById('collection-select');
             select.innerHTML = collections.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            addToCollectionModal.style.display = 'flex';
+
+            const modal = document.getElementById('add-to-collection-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('open'), 10);
         }
 
         function closeAddToCollectionModal() {
             articleToAddToCollection = null;
-            addToCollectionModal.style.display = 'none';
+            const modal = document.getElementById('add-to-collection-modal');
+            modal.classList.remove('open');
+            setTimeout(() => modal.classList.add('hidden'), 200);
         }
 
         async function handleSaveToCollection() {
@@ -2092,10 +2169,13 @@
 
         // --- Note Handling ---
         function openNoteModal() {
+            const modal = document.getElementById('note-modal');
             const highlight = highlights.find(h => h.highlightId === currentHighlightId);
             document.getElementById('note-textarea').value = highlight ? (highlight.note || '') : '';
-            noteModal.style.display = 'flex';
             hideHighlighterToolbar();
+
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('open'), 10);
 
             setTimeout(() => {
                 document.getElementById('note-textarea').focus();
@@ -2138,10 +2218,14 @@
         }
 
         function closeNoteModal() {
-            noteModal.style.display = 'none';
-            currentHighlightId = null;
-            currentSelection = null;
-            document.getElementById('note-textarea').value = '';
+            const modal = document.getElementById('note-modal');
+            modal.classList.remove('open');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                currentHighlightId = null;
+                currentSelection = null;
+                document.getElementById('note-textarea').value = '';
+            }, 200);
         }
 
         // --- Settings Popover Functions ---
@@ -2162,15 +2246,21 @@
 
         // --- Confirmation Modal ---
         function showConfirmModal(title, text, onConfirm) {
+            const modal = document.getElementById('confirm-modal');
             document.getElementById('confirm-modal-title').textContent = title;
             document.getElementById('confirm-modal-text').textContent = text;
             confirmCallback = onConfirm;
-            confirmModal.style.display = 'flex';
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('open'), 10);
         }
 
         function hideConfirmModal() {
-            confirmModal.style.display = 'none';
-            confirmCallback = null;
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.remove('open');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                confirmCallback = null;
+            }, 200);
         }
 
 
@@ -2570,7 +2660,7 @@
                     deleteArticle(articleId);
                 } else if (archiveBtnEl) {
                     e.stopPropagation();
-                    handleArchiveArticle(articleId);
+                    handleArchiveArticle(articleId, card);
                 } else if (addToCollectionBtn) {
                     e.stopPropagation();
                     openAddToCollectionModal(articleId);
@@ -2674,6 +2764,8 @@
                     pauseTTS();
                 } else if (e.target.closest('#tts-stop-btn')) {
                     stopTTS();
+                } else if (e.target.closest('#focus-mode-btn')) {
+                    document.body.classList.toggle('focus-mode');
                 }
             });
 
@@ -2787,11 +2879,14 @@
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
-                    if (noteModal.style.display === 'flex') {
+                    if (document.body.classList.contains('focus-mode')) {
+                        document.body.classList.remove('focus-mode');
+                    }
+                    else if (noteModal.classList.contains('open')) {
                         closeNoteModal();
                     } else if (!settingsPopover.classList.contains('hidden')) {
                         toggleSettingsPopover();
-                    } else if (confirmModal.style.display === 'flex') {
+                    } else if (confirmModal.classList.contains('open')) {
                         hideConfirmModal();
                     }
                 }
@@ -2799,6 +2894,7 @@
 
             window.addEventListener('scroll', () => {
                 updateReadingProgress();
+                document.body.classList.remove('focus-mode');
 
                 if (readerView.style.display === 'block') {
                     if (readingPositionSaveTimeout) clearTimeout(readingPositionSaveTimeout);

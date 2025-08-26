@@ -1522,7 +1522,7 @@
                                 <button class="archive-article-btn text-gray-500 hover:text-gray-700 dark:hover:text-gray-400" data-id="${article.id}" title="${article.isArchived ? 'Unarchive' : 'Archive'}">
                                     <i data-lucide="${article.isArchived ? 'unarchive' : 'archive'}" class="h-5 w-5"></i>
                                 </button>
-                                <button class="delete-article-btn text-red-500 hover:text-red-700 dark:hover:text-red-400" data-id="${article.id}">
+                                <button class="delete-article-btn text-red-500 hover:text-red-700 dark:hover:text-red-400" data-id="${article.id}" title="Delete">
                                     <i data-lucide="trash-2" class="h-5 w-5"></i>
                                 </button>
                             </div>
@@ -1548,7 +1548,7 @@
                         </div>
                         <h3 class="font-semibold text-gray-800 dark:text-white mt-4">${collection.name}</h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400">${articleCount} articles</p>
-                        <button class="delete-collection-btn absolute top-2 right-2 p-1.5 rounded-full bg-white dark:bg-gray-700 text-red-500 hover:bg-red-100 dark:hover:bg-red-900 opacity-0 group-hover:opacity-100 transition-opacity" data-id="${collection.id}">
+                        <button class="delete-collection-btn absolute top-2 right-2 p-1.5 rounded-full bg-white dark:bg-gray-700 text-red-500 hover:bg-red-100 dark:hover:bg-red-900 opacity-0 group-hover:opacity-100 transition-opacity" data-id="${collection.id}" title="Delete Collection">
                             <i data-lucide="trash-2" class="h-4 w-4"></i>
                         </button>
                     </div>
@@ -1776,24 +1776,24 @@
             });
         }
 
-        async function handleArchiveArticle(articleId, cardElement) {
+        async function handleArchiveArticle(articleId) {
             const articleToUpdate = articles.find(a => a.id === articleId);
             if (!articleToUpdate) return;
 
-            cardElement.classList.add('archiving-out');
+            const isArchiving = !articleToUpdate.isArchived;
+            const title = isArchiving ? "Archive this article?" : "Unarchive this article?";
+            const text = isArchiving ? "You can view it later by using the 'Show Archived' toggle." : "";
 
-            cardElement.addEventListener('animationend', async () => {
-                const newArchivedState = !articleToUpdate.isArchived;
+            showConfirmModal(title, text, async () => {
                 const articleRef = doc(db, `users/${userId}/articles`, articleId);
                 try {
-                    await updateDoc(articleRef, { isArchived: newArchivedState });
-                    showToast(newArchivedState ? "Article archived." : "Article unarchived.");
+                    await updateDoc(articleRef, { isArchived: isArchiving });
+                    showToast(isArchiving ? "Article archived." : "Article unarchived.");
                 } catch (error) {
                     console.error("Error updating archive status:", error);
                     showToast("Could not update article.", "error");
-                    cardElement.classList.remove('archiving-out'); // Revert animation on error
                 }
-            }, { once: true });
+            });
         }
 
         async function handleAddTag(articleId, tagInput) {
@@ -2660,7 +2660,7 @@
                     deleteArticle(articleId);
                 } else if (archiveBtnEl) {
                     e.stopPropagation();
-                    handleArchiveArticle(articleId, card);
+                    handleArchiveArticle(articleId);
                 } else if (addToCollectionBtn) {
                     e.stopPropagation();
                     openAddToCollectionModal(articleId);

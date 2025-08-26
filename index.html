@@ -27,27 +27,23 @@
         .modal-container {
             transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
         }
-
         .modal-panel {
             transition: transform 0.2s ease-in-out;
         }
-
         .modal-container:not(.open) {
             opacity: 0;
             visibility: hidden;
         }
-
         .modal-container:not(.open) .modal-panel {
             transform: scale(0.95) translateY(10px);
         }
-
+        
         @keyframes fade-and-slide-out {
             from {
                 opacity: 1;
                 transform: scale(1);
                 max-height: 500px;
             }
-
             to {
                 opacity: 0;
                 transform: scale(0.95);
@@ -57,31 +53,25 @@
                 border: none;
             }
         }
-
         .archiving-out {
             animation: fade-and-slide-out 0.3s ease-out forwards;
             overflow: hidden;
         }
 
         /* --- Immersive Focus Mode --- */
-        body.focus-mode #app>header,
+        body.focus-mode #app > header,
         body.focus-mode #progress-bar,
         body.focus-mode #reader-view-header {
             opacity: 0;
             pointer-events: none;
         }
-
         body.focus-mode #reader-view-content {
             padding-top: 2rem;
             padding-bottom: 2rem;
             box-shadow: none;
             border-radius: 0;
         }
-
-        #app>header,
-        #progress-bar,
-        #reader-view-header,
-        #reader-view-content {
+        #app > header, #progress-bar, #reader-view-header, #reader-view-content {
             transition: opacity 0.3s ease-in-out, padding 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-radius 0.3s ease-in-out;
         }
 
@@ -95,9 +85,9 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-
+        
         .dark .btn-interactive:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .btn-interactive:active {
@@ -105,18 +95,16 @@
             filter: brightness(0.95);
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
-
+        
         /* --- Enhanced Card Design --- */
         .article-card-image {
             height: 150px;
             object-fit: cover;
             border-bottom: 1px solid #e5e7eb;
         }
-
         .dark .article-card-image {
             border-bottom-color: #374151;
         }
-
         .article-card-actions {
             transition: opacity 0.2s ease-in-out;
         }
@@ -164,13 +152,8 @@
 
         /* --- Skeleton Loader Styles --- */
         @keyframes shimmer {
-            0% {
-                background-position: -1000px 0;
-            }
-
-            100% {
-                background-position: 1000px 0;
-            }
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
         }
 
         .skeleton {
@@ -178,7 +161,6 @@
             background: linear-gradient(to right, #f0f0f0 8%, #e0e0e0 18%, #f0f0f0 33%);
             background-size: 2000px 100%;
         }
-
         .dark .skeleton {
             background: linear-gradient(to right, #2d3748 8%, #4a5568 18%, #2d3748 33%);
             background-size: 2000px 100%;
@@ -190,7 +172,6 @@
             padding: 1.25rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         }
-
         .dark .skeleton-card {
             background-color: #1f2937;
         }
@@ -200,7 +181,7 @@
             border-radius: 0.25rem;
             margin-bottom: 0.75rem;
         }
-
+        
         /* --- Tag Suggestions --- */
         .tag-suggestions {
             position: absolute;
@@ -215,25 +196,19 @@
             bottom: 100%;
             margin-bottom: 4px;
         }
-
         .dark .tag-suggestions {
             background-color: #374151;
             border-color: #4b5563;
         }
-
         .tag-suggestion-item {
             padding: 0.5rem 0.75rem;
             cursor: pointer;
             font-size: 0.875rem;
         }
-
-        .tag-suggestion-item:hover,
-        .tag-suggestion-item.active {
+        .tag-suggestion-item:hover, .tag-suggestion-item.active {
             background-color: #f3f4f6;
         }
-
-        .dark .tag-suggestion-item:hover,
-        .dark .tag-suggestion-item.active {
+        .dark .tag-suggestion-item:hover, .dark .tag-suggestion-item.active {
             background-color: #4b5563;
         }
 
@@ -242,23 +217,19 @@
             background-color: rgba(59, 130, 246, 0.2);
             border-radius: 3px;
         }
-
+        
         /* --- Collections --- */
         .collection-card {
-            transition: transform 0.2s, box-shadow 0.2s;
+             transition: transform 0.2s, box-shadow 0.2s;
         }
-
         .collection-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-
         .dark .collection-card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
         }
-
-        .collection-card::before,
-        .collection-card::after {
+        .collection-card::before, .collection-card::after {
             content: '';
             position: absolute;
             left: 0;
@@ -269,23 +240,19 @@
             z-index: -1;
             transition: transform 0.3s ease;
         }
-
         .collection-card::before {
             top: 4px;
             transform: scale(0.95);
             opacity: 0.6;
         }
-
-        .collection-card::after {
+         .collection-card::after {
             top: 8px;
             transform: scale(0.9);
             opacity: 0.3;
         }
-
         .collection-card:hover::before {
             transform: scale(0.97) translateY(-2px);
         }
-
         .collection-card:hover::after {
             transform: scale(0.92) translateY(-4px);
         }
@@ -675,8 +642,7 @@
     <div id="toast"></div>
 
     <!-- Back to Top Button -->
-    <button id="back-to-top-btn"
-        class="p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 btn-interactive">
+    <button id="back-to-top-btn" class="p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 btn-interactive">
         <i data-lucide="arrow-up" class="h-6 w-6"></i>
     </button>
 
@@ -689,8 +655,7 @@
             <nav class="flex items-center space-x-2">
                 <div id="main-nav" class="hidden bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
                     <button id="library-btn" class="nav-btn px-4 py-1 rounded-md text-sm font-semibold">Library</button>
-                    <button id="collections-btn"
-                        class="nav-btn px-4 py-1 rounded-md text-sm font-semibold">Collections</button>
+                    <button id="collections-btn" class="nav-btn px-4 py-1 rounded-md text-sm font-semibold">Collections</button>
                     <button id="highlights-btn"
                         class="nav-btn px-4 py-1 rounded-md text-sm font-semibold">Highlights</button>
                     <button id="stats-btn" class="nav-btn px-4 py-1 rounded-md text-sm font-semibold">Stats</button>
@@ -768,8 +733,7 @@
                 <div id="library-view">
                     <div id="library-header" class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                         <h2 id="library-title" class="text-2xl font-bold">All Articles</h2>
-                        <button id="back-to-collections-btn"
-                            class="hidden flex items-center text-blue-600 dark:text-blue-400 hover:underline">
+                        <button id="back-to-collections-btn" class="hidden flex items-center text-blue-600 dark:text-blue-400 hover:underline">
                             <i data-lucide="arrow-left" class="h-4 w-4 mr-2"></i> Back to Collections
                         </button>
                     </div>
@@ -826,10 +790,10 @@
                         <p class="text-gray-500">Add an article using the URL bar above to get started.</p>
                     </div>
                 </div>
-
+                
                 <!-- Collections View -->
                 <div id="collections-view" class="hidden">
-                    <div class="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                     <div class="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                         <h2 class="text-xl font-semibold mb-3">Create New Collection</h2>
                         <div class="flex flex-col sm:flex-row gap-3">
                             <input type="text" id="collection-name-input" placeholder="Enter collection name..."
@@ -840,9 +804,8 @@
                             </button>
                         </div>
                     </div>
-                    <div id="collection-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-                    </div>
-                    <div id="collections-empty-state" class="hidden text-center py-16">
+                    <div id="collection-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12"></div>
+                     <div id="collections-empty-state" class="hidden text-center py-16">
                         <i data-lucide="folder" class="h-16 w-16 mx-auto text-gray-400 mb-4"></i>
                         <h3 class="text-xl font-semibold">No collections yet</h3>
                         <p class="text-gray-500">Create a collection to organize your articles.</p>
@@ -942,8 +905,7 @@
     </div>
 
     <!-- Note Modal -->
-    <div id="note-modal"
-        class="modal-container hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div id="note-modal" class="modal-container hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div class="modal-panel bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
             <h3 class="text-lg font-semibold mb-4">Add a Note</h3>
             <textarea id="note-textarea" rows="4"
@@ -972,21 +934,18 @@
             </div>
         </div>
     </div>
-
+    
     <!-- Add to Collection Modal -->
-    <div id="add-to-collection-modal"
-        class="modal-container hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div id="add-to-collection-modal" class="modal-container hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div class="modal-panel bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
             <h3 class="text-lg font-semibold mb-4">Add to Collection</h3>
-            <select id="collection-select"
-                class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 mb-4">
+            <select id="collection-select" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 mb-4">
                 <!-- Options will be populated by JS -->
             </select>
             <div class="mt-4 flex justify-end space-x-3">
                 <button id="cancel-add-to-collection-btn"
                     class="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
-                <button id="save-add-to-collection-btn"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add</button>
+                <button id="save-add-to-collection-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add</button>
             </div>
         </div>
     </div>
@@ -1077,15 +1036,15 @@
         let app, db, auth, userId;
         let articles = [];
         let highlights = [];
-        let collections = [];
+        let collections = []; 
         let currentArticle = null;
         let currentSelection = null;
         let currentHighlightId = null;
-        let currentCollectionId = null;
-        let articleToAddToCollection = null;
+        let currentCollectionId = null; 
+        let articleToAddToCollection = null; 
         let unsubscribeArticles = null;
         let unsubscribeHighlights = null;
-        let unsubscribeCollections = null;
+        let unsubscribeCollections = null; 
         let toastTimeout = null;
         let confirmCallback = null;
         let showArchived = false;
@@ -1093,10 +1052,10 @@
         let readingPositionSaveTimeout = null;
         let inArticleSearchResults = [];
         let currentSearchResultIndex = -1;
-        let isInitialArticleLoad = true;
-        let ttsUtterance = null;
-        let ttsSentences = [];
-        let currentTtsSentenceIndex = 0;
+        let isInitialArticleLoad = true; 
+        let ttsUtterance = null; 
+        let ttsSentences = []; 
+        let currentTtsSentenceIndex = 0; 
 
         // --- UI Element References ---
         const loginView = document.getElementById('login-view');
@@ -1105,27 +1064,27 @@
         const userProfile = document.getElementById('user-profile');
         const userPhoto = document.getElementById('user-photo');
         const libraryView = document.getElementById('library-view');
-        const collectionsView = document.getElementById('collections-view');
+        const collectionsView = document.getElementById('collections-view'); 
         const readerView = document.getElementById('reader-view');
         const highlightsView = document.getElementById('highlights-view');
         const statsView = document.getElementById('stats-view');
         const libraryBtn = document.getElementById('library-btn');
-        const collectionsBtn = document.getElementById('collections-btn');
+        const collectionsBtn = document.getElementById('collections-btn'); 
         const highlightsBtn = document.getElementById('highlights-btn');
         const statsBtn = document.getElementById('stats-btn');
         const articleGrid = document.getElementById('article-grid');
-        const collectionGrid = document.getElementById('collection-grid');
+        const collectionGrid = document.getElementById('collection-grid'); 
         const skeletonGrid = document.getElementById('skeleton-grid');
         const highlightsFeed = document.getElementById('highlights-feed');
         const highlighterToolbar = document.getElementById('highlighter-toolbar');
         const noteModal = document.getElementById('note-modal');
         const settingsPopover = document.getElementById('settings-popover');
         const confirmModal = document.getElementById('confirm-modal');
-        const addToCollectionModal = document.getElementById('add-to-collection-modal');
+        const addToCollectionModal = document.getElementById('add-to-collection-modal'); 
         const addArticleBtn = document.getElementById('add-article-btn');
         const articleUrlInput = document.getElementById('article-url-input');
         const libraryEmptyState = document.getElementById('library-empty-state');
-        const collectionsEmptyState = document.getElementById('collections-empty-state');
+        const collectionsEmptyState = document.getElementById('collections-empty-state'); 
         const highlightsEmptyState = document.getElementById('highlights-empty-state');
         const settingsBtn = document.getElementById('settings-btn');
         const homeButton = document.getElementById('home-button');
@@ -1175,10 +1134,10 @@
 
                     if (unsubscribeArticles) unsubscribeArticles();
                     if (unsubscribeHighlights) unsubscribeHighlights();
-                    if (unsubscribeCollections) unsubscribeCollections();
+                    if (unsubscribeCollections) unsubscribeCollections(); 
                     articles = [];
                     highlights = [];
-                    collections = [];
+                    collections = []; 
                     renderLibrary();
                 }
             });
@@ -1210,7 +1169,7 @@
             const articlesQuery = query(collection(db, `users/${userId}/articles`));
             unsubscribeArticles = onSnapshot(articlesQuery, snapshot => {
                 articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                isInitialArticleLoad = false;
+                isInitialArticleLoad = false; 
                 if (libraryView.style.display === 'block') {
                     renderLibrary();
                 }
@@ -1297,16 +1256,16 @@
 
         // --- View Management ---
         function showView(view) {
-            stopTTS();
+            stopTTS(); 
             libraryView.style.display = 'none';
             collectionsView.style.display = 'none';
             readerView.style.display = 'none';
             highlightsView.style.display = 'none';
             statsView.style.display = 'none';
             highlighterToolbar.style.display = 'none';
-            progressBar.style.width = '0%';
+            progressBar.style.width = '0%'; 
 
-            clearInArticleSearch();
+            clearInArticleSearch(); 
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('bg-white', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-white');
@@ -1353,8 +1312,8 @@
                     const text = line.replace(/^#{1,6}\s/, '');
                     processedLines.push(`<h${Math.min(level, 4)}>${text}</h${Math.min(level, 4)}>`);
                 } else if (line.length < 100 && (
-                    line.match(/^[A-Z][A-Za-z0-9\s\-:]{10,}$/) ||
-                    (i < lines.length - 1 && lines[i + 1] && lines[i + 1].match(/^[-=]{3,}$/))
+                    line.match(/^[A-Z][A-Za-z0-9\s\-:]{10,}$/) || 
+                    (i < lines.length - 1 && lines[i + 1] && lines[i + 1].match(/^[-=]{3,}$/)) 
                 )) {
                     if (i < 3) {
                         processedLines.push(`<h2>${line}</h2>`);
@@ -1438,7 +1397,7 @@
 
             const libraryTitle = document.getElementById('library-title');
             const backToCollectionsBtn = document.getElementById('back-to-collections-btn');
-
+            
             if (currentCollectionId) {
                 const collection = collections.find(c => c.id === currentCollectionId);
                 libraryTitle.textContent = collection ? collection.name : 'Collection';
@@ -1458,7 +1417,7 @@
                     article.title.toLowerCase().includes(searchTerm) ||
                     article.source.toLowerCase().includes(searchTerm) ||
                     (article.tags && article.tags.some(tag => tag.toLowerCase().includes(searchTerm)));
-
+                
                 const inCollection = currentCollectionId ? article.collectionId === currentCollectionId : true;
 
                 return isArchivedMatch && isSearchMatch && inCollection;
@@ -1489,8 +1448,8 @@
                                     <i data-lucide="x" class="h-3 w-3 delete-tag-btn" data-tag-to-delete="${tag}"></i>
                                 </span>`;
                     }).join('');
-
-                    const imageHTML = article.imageUrl
+                    
+                    const imageHTML = article.imageUrl 
                         ? `<img src="${article.imageUrl}" alt="" class="article-card-image" onerror="this.style.display='none'">`
                         : '';
 
@@ -1520,7 +1479,7 @@
                                     <i data-lucide="folder-plus" class="h-5 w-5"></i>
                                 </button>
                                 <button class="archive-article-btn text-gray-500 hover:text-gray-700 dark:hover:text-gray-400" data-id="${article.id}" title="${article.isArchived ? 'Unarchive' : 'Archive'}">
-                                    <i data-lucide="${article.isArchived ? 'unarchive' : 'archive'}" class="h-5 w-5"></i>
+                                    <i data-lucide="${article.isArchived ? 'archive-off' : 'archive'}" class="h-5 w-5"></i>
                                 </button>
                                 <button class="delete-article-btn text-red-500 hover:text-red-700 dark:hover:text-red-400" data-id="${article.id}" title="Delete">
                                     <i data-lucide="trash-2" class="h-5 w-5"></i>
@@ -1532,7 +1491,7 @@
             }
             lucide.createIcons();
         }
-
+        
         function renderCollections() {
             if (collections.length === 0) {
                 collectionGrid.innerHTML = '';
@@ -1565,7 +1524,7 @@
             const authorInfo = currentArticle.author ? `<span class="font-medium">${currentArticle.author}</span>` : '';
             const dateInfo = currentArticle.publishedDate ? ` &bull; ${currentArticle.publishedDate}` : '';
             const readTimeInfo = currentArticle.readTime ? ` &bull; ${currentArticle.readTime} min read` : '';
-
+            
             const metadataHTML = `
                 <div class="text-gray-600 dark:text-gray-400 mb-8 text-sm">
                     From <span class="font-medium">${currentArticle.source}</span>
@@ -1611,7 +1570,7 @@
             `;
 
             setTimeout(() => {
-                applySettings();
+                applySettings(); 
                 applyHighlightsToReader();
                 setupTextSelectionListeners();
                 if (currentArticle.lastReadPosition > 0) {
@@ -1675,10 +1634,10 @@
             const topColorEl = document.getElementById('stats-top-color');
             if (topColor) {
                 topColorEl.innerHTML = `<div class="h-6 w-6 rounded-full" style="background-color: rgba(${topColor === 'yellow' ? '255, 229, 0, 0.8' :
-                    topColor === 'blue' ? '0, 176, 255, 0.7' :
-                        topColor === 'green' ? '80, 227, 194, 0.8' :
-                            topColor === 'red' ? '255, 114, 111, 0.8' :
-                                '187, 134, 252, 0.8'
+                        topColor === 'blue' ? '0, 176, 255, 0.7' :
+                            topColor === 'green' ? '80, 227, 194, 0.8' :
+                                topColor === 'red' ? '255, 114, 111, 0.8' :
+                                    '187, 134, 252, 0.8'
                     });"></div> <span class="capitalize">${topColor}</span>`;
             } else {
                 topColorEl.textContent = '-';
@@ -1698,7 +1657,7 @@
                 const parsedArticle = await fetchAndParseArticle(url);
                 await addDoc(collection(db, `users/${userId}/articles`), {
                     ...parsedArticle,
-                    collectionId: currentCollectionId,
+                    collectionId: currentCollectionId, 
                     createdAt: serverTimestamp()
                 });
                 articleUrlInput.value = '';
@@ -1748,7 +1707,7 @@
             }
 
             const wordCount = data.data.content.split(' ').length;
-            const readTime = Math.ceil(wordCount / 225);
+            const readTime = Math.ceil(wordCount / 225); 
 
             return {
                 url: data.data.url,
@@ -1779,7 +1738,7 @@
         async function handleArchiveArticle(articleId) {
             const articleToUpdate = articles.find(a => a.id === articleId);
             if (!articleToUpdate) return;
-
+            
             const isArchiving = !articleToUpdate.isArchived;
             const title = isArchiving ? "Archive this article?" : "Unarchive this article?";
             const text = isArchiving ? "You can view it later by using the 'Show Archived' toggle." : "";
@@ -1805,7 +1764,7 @@
                 await updateDoc(articleRef, {
                     tags: arrayUnion(newTag)
                 });
-                tagInput.value = '';
+                tagInput.value = ''; 
                 showToast("Tag added!");
             } catch (error) {
                 console.error("Error adding tag:", error);
@@ -1826,7 +1785,7 @@
                 showToast("Failed to remove tag.", "error");
             }
         }
-
+        
         // --- Collection Functions ---
         async function handleAddCollection() {
             const nameInput = document.getElementById('collection-name-input');
@@ -1840,16 +1799,16 @@
                 });
                 nameInput.value = '';
                 showToast("Collection created!");
-            } catch (e) {
+            } catch(e) {
                 console.error("Error creating collection", e);
                 showToast("Failed to create collection.", "error");
             }
         }
 
         async function deleteCollection(collectionId) {
-            showConfirmModal("Delete this collection?", "This will not delete the articles inside it.", async () => {
+             showConfirmModal("Delete this collection?", "This will not delete the articles inside it.", async () => {
                 const batch = writeBatch(db);
-
+                
                 const articlesToUpdate = articles.filter(a => a.collectionId === collectionId);
                 articlesToUpdate.forEach(article => {
                     const articleRef = doc(db, `users/${userId}/articles`, article.id);
@@ -1861,33 +1820,33 @@
 
                 await batch.commit();
                 showToast("Collection deleted.");
-            });
+             });
         }
-
+        
         function openAddToCollectionModal(articleId) {
             articleToAddToCollection = articleId;
             const select = document.getElementById('collection-select');
             select.innerHTML = collections.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-
+            
             const modal = document.getElementById('add-to-collection-modal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
         }
-
+        
         function closeAddToCollectionModal() {
             articleToAddToCollection = null;
             const modal = document.getElementById('add-to-collection-modal');
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 200);
         }
-
+        
         async function handleSaveToCollection() {
             const collectionId = document.getElementById('collection-select').value;
             if (!articleToAddToCollection || !collectionId) return;
-
+            
             const articleRef = doc(db, `users/${userId}/articles`, articleToAddToCollection);
             await updateDoc(articleRef, { collectionId });
-
+            
             showToast("Article added to collection!");
             closeAddToCollectionModal();
         }
@@ -1938,7 +1897,7 @@
                     parent.insertBefore(mark.firstChild, mark);
                 }
                 parent.removeChild(mark);
-                parent.normalize();
+                parent.normalize(); 
             });
 
             const articleHighlights = highlights.filter(h => h.articleId === currentArticle.id);
@@ -1988,7 +1947,7 @@
                     parent.insertBefore(mark, textNode);
                     parent.insertBefore(afterNode, textNode);
                     parent.removeChild(textNode);
-                    break;
+                    break; 
                 }
             }
         }
@@ -2028,7 +1987,7 @@
                 } else if (!e.target.closest('mark[data-highlight-id]')) {
                     hideHighlighterToolbar();
                 }
-            }, 50);
+            }, 50); 
         }
 
 
@@ -2073,16 +2032,16 @@
             }
 
             let left = selectionRect.left + (selectionRect.width / 2) - (toolbarRect.width / 2);
-            let top = selectionRect.top - toolbarRect.height - 10;
+            let top = selectionRect.top - toolbarRect.height - 10; 
 
-            if (top < 10) {
+            if (top < 10) { 
                 top = selectionRect.bottom + 10;
             }
 
-            if (left < 10) {
+            if (left < 10) { 
                 left = 10;
             }
-            else if (left + toolbarRect.width > viewportWidth - 10) {
+            else if (left + toolbarRect.width > viewportWidth - 10) { 
                 left = viewportWidth - toolbarRect.width - 10;
             }
 
@@ -2239,7 +2198,7 @@
                 settingsPopover.classList.add('opacity-0', 'scale-95');
                 setTimeout(() => {
                     settingsPopover.classList.add('hidden');
-                    saveSettings();
+                    saveSettings(); 
                 }, 200);
             }
         }
@@ -2417,7 +2376,7 @@
             const text = articleContent.innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
             ttsSentences = text.match(/[^.!?]+[.!?]+/g) || [text];
             currentTtsSentenceIndex = 0;
-
+            
             speakNextSentence();
             updateTTSControls(true);
         }
@@ -2433,14 +2392,14 @@
                 currentTtsSentenceIndex++;
                 speakNextSentence();
             };
-
+            
             ttsUtterance.onboundary = (event) => {
                 highlightSpokenText(event);
             };
 
             speechSynthesis.speak(ttsUtterance);
         }
-
+        
         function highlightSpokenText(event) {
             const articleContent = document.getElementById('article-content');
             if (!articleContent) return;
@@ -2455,7 +2414,7 @@
             const sentence = ttsSentences[currentTtsSentenceIndex];
             const walker = document.createTreeWalker(articleContent, NodeFilter.SHOW_TEXT);
             let node;
-            while (node = walker.nextNode()) {
+            while(node = walker.nextNode()) {
                 const index = node.nodeValue.indexOf(sentence);
                 if (index > -1) {
                     const range = document.createRange();
@@ -2483,7 +2442,7 @@
                 speechSynthesis.cancel();
             }
             updateTTSControls(false);
-
+            
             const existingHighlight = document.querySelector('.tts-speaking');
             if (existingHighlight) {
                 const parent = existingHighlight.parentNode;
@@ -2497,7 +2456,7 @@
             const pauseBtn = document.getElementById('tts-pause-btn');
             const stopBtn = document.getElementById('tts-stop-btn');
 
-            if (!playBtn) return;
+            if (!playBtn) return; 
 
             if (isPlaying) {
                 playBtn.style.display = 'none';
@@ -2507,7 +2466,7 @@
                 playBtn.style.display = 'block';
                 pauseBtn.style.display = 'none';
                 stopBtn.style.display = 'block';
-            } else {
+            } else { 
                 playBtn.style.display = 'block';
                 pauseBtn.style.display = 'none';
                 stopBtn.style.display = 'none';
@@ -2528,15 +2487,15 @@
             const suggestionsContainer = document.createElement('div');
             suggestionsContainer.className = 'tag-suggestions';
             suggestionsContainer.innerHTML = filteredTags.map(tag => `<div class="tag-suggestion-item" data-tag="${tag}">${tag}</div>`).join('');
-
+            
             inputElement.parentElement.appendChild(suggestionsContainer);
         }
 
         function hideTagSuggestions(inputElement) {
-            const suggestions = inputElement.parentElement.querySelector('.tag-suggestions');
-            if (suggestions) {
+             const suggestions = inputElement.parentElement.querySelector('.tag-suggestions');
+             if (suggestions) {
                 suggestions.remove();
-            }
+             }
         }
 
 
@@ -2568,7 +2527,7 @@
                     handleAddArticle();
                 }
             });
-
+            
             // Collection management
             document.getElementById('add-collection-btn').addEventListener('click', handleAddCollection);
             document.getElementById('collection-name-input').addEventListener('keypress', (e) => {
@@ -2576,11 +2535,11 @@
                     handleAddCollection();
                 }
             });
-
+            
             collectionGrid.addEventListener('click', e => {
                 const card = e.target.closest('.collection-card');
                 if (!card) return;
-
+                
                 const collectionId = card.dataset.id;
                 const deleteBtn = e.target.closest('.delete-collection-btn');
 
@@ -2592,7 +2551,7 @@
                     showView('library');
                 }
             });
-
+            
             document.getElementById('save-add-to-collection-btn').addEventListener('click', handleSaveToCollection);
             document.getElementById('cancel-add-to-collection-btn').addEventListener('click', closeAddToCollectionModal);
 
@@ -2704,16 +2663,16 @@
             });
 
             articleGrid.addEventListener('focusout', e => {
-                if (e.target.classList.contains('add-tag-input')) {
+                 if (e.target.classList.contains('add-tag-input')) {
                     setTimeout(() => hideTagSuggestions(e.target), 150);
-                }
+                 }
             });
 
             articleGrid.addEventListener('keydown', e => {
                 if (e.target.classList.contains('add-tag-input')) {
                     const suggestionsContainer = e.target.parentElement.querySelector('.tag-suggestions');
                     if (!suggestionsContainer) return;
-
+                    
                     const items = suggestionsContainer.querySelectorAll('.tag-suggestion-item');
                     let activeIndex = Array.from(items).findIndex(item => item.classList.contains('active'));
 
@@ -2914,7 +2873,7 @@
             setupTheme();
             setupEventListeners();
             lucide.createIcons();
-            showView('library');
+            showView('library'); 
         });
     </script>
 

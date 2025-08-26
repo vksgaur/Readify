@@ -125,9 +125,17 @@
         /* --- Immersive Focus Mode --- */
         body.focus-mode #app>header,
         body.focus-mode #progress-bar,
-        body.focus-mode #reader-view-header {
+        body.focus-mode #reader-view-header,
+        body.focus-mode #highlight-map {
             opacity: 0;
             pointer-events: none;
+        }
+        
+        body.focus-mode:hover #app>header,
+        body.focus-mode:hover #progress-bar,
+        body.focus-mode:hover #reader-view-header,
+        body.focus-mode:hover #highlight-map {
+            opacity: 1;
         }
 
         body.focus-mode #reader-view-content {
@@ -136,11 +144,21 @@
             box-shadow: none;
             border-radius: 0;
         }
+        
+        body.focus-mode::-webkit-scrollbar {
+            display: none;
+        }
+        body.focus-mode {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
 
         #app>header,
         #progress-bar,
         #reader-view-header,
-        #reader-view-content {
+        #reader-view-content,
+        #highlight-map {
             transition: opacity 0.3s ease-in-out, padding 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-radius 0.3s ease-in-out;
         }
 
@@ -729,6 +747,34 @@
         #archive-toggle:checked~.block {
             background-color: #93c5fd;
         }
+
+        /* Highlight Map */
+        #highlight-map {
+            position: fixed;
+            right: 10px;
+            top: 100px;
+            width: 8px;
+            height: calc(100vh - 200px);
+            background-color: rgba(0,0,0,0.05);
+            border-radius: 4px;
+            z-index: 50;
+        }
+        .dark #highlight-map {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .highlight-marker {
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: transform 0.2s;
+        }
+        .highlight-marker:hover {
+            transform: scaleX(1.5);
+            opacity: 1;
+        }
     </style>
 
     <!-- Firebase Configuration -->
@@ -907,6 +953,12 @@
                                         class="w-full sm:w-64 pl-10 p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
                                 </div>
                                 <div class="flex items-center gap-4">
+                                    <select id="read-time-filter" class="p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
+                                        <option value="all">All Reading Times</option>
+                                        <option value="short">Short (< 5 min)</option>
+                                        <option value="medium">Medium (5-15 min)</option>
+                                        <option value="long">Long (> 15 min)</option>
+                                    </select>
                                     <div class="flex items-center space-x-2">
                                         <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Show Archived</span>
                                         <label for="archive-toggle" class="flex items-center cursor-pointer">
@@ -933,7 +985,10 @@
                             <div id="library-empty-state" class="hidden text-center py-16">
                                 <i data-lucide="book-open" class="h-16 w-16 mx-auto text-gray-400 mb-4"></i>
                                 <h3 class="text-xl font-semibold">Your library is empty</h3>
-                                <p class="text-gray-500">Add an article using the URL bar above to get started.</p>
+                                <p class="text-gray-500 mb-6">Add an article using the URL bar above to get started.</p>
+                                <button id="empty-state-add-btn" class="bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-md hover:bg-indigo-700 btn-interactive">
+                                    Add Your First Article
+                                </button>
                             </div>
                         </div>
 
@@ -961,6 +1016,8 @@
 
                         <!-- Reader View -->
                         <div id="reader-view" class="hidden"></div>
+                        <div id="highlight-map" class="hidden"></div>
+
 
                         <!-- Highlights View -->
                         <div id="highlights-view" class="hidden">
@@ -1251,6 +1308,7 @@
         const sidebar = document.getElementById('sidebar');
         const sidebarToggleMobile = document.getElementById('sidebar-toggle-mobile');
         const sidebarToggleDesktop = document.getElementById('sidebar-toggle-desktop');
+        const highlightMap = document.getElementById('highlight-map');
 
 
         // --- Settings State ---
@@ -1343,6 +1401,7 @@
                 }
                 if (currentArticle) {
                     applyHighlightsToReader();
+                    renderHighlightMap();
                 }
             });
 
@@ -1423,6 +1482,7 @@
             highlightsView.style.display = 'none';
             statsView.style.display = 'none';
             highlighterToolbar.style.display = 'none';
+            highlightMap.style.display = 'none';
             progressBar.style.width = '0%';
 
             clearInArticleSearch();
@@ -1443,6 +1503,7 @@
             }
             else if (view === 'reader') {
                 readerView.style.display = 'block';
+                highlightMap.style.display = 'block';
             } else if (view === 'highlights') {
                 highlightsView.style.display = 'block';
                 highlightsBtn.classList.add('active');
@@ -1565,17 +1626,30 @@
 
             const searchTerm = document.getElementById('search-library-input')?.value.toLowerCase() || '';
             const sortBy = document.getElementById('sort-library-select')?.value || 'newest';
+            const readTimeFilter = document.getElementById('read-time-filter').value;
+
 
             let filteredArticles = articles.filter(article => {
                 const isArchivedMatch = showArchived ? article.isArchived : !article.isArchived;
+                
                 const isSearchMatch = searchTerm === '' ||
                     article.title.toLowerCase().includes(searchTerm) ||
                     article.source.toLowerCase().includes(searchTerm) ||
+                    (article.content && article.content.toLowerCase().includes(searchTerm)) ||
                     (article.tags && article.tags.some(tag => tag.toLowerCase().includes(searchTerm)));
 
                 const inCollection = currentCollectionId ? article.collectionId === currentCollectionId : true;
 
-                return isArchivedMatch && isSearchMatch && inCollection;
+                let isReadTimeMatch = true;
+                if (readTimeFilter === 'short') {
+                    isReadTimeMatch = article.readTime < 5;
+                } else if (readTimeFilter === 'medium') {
+                    isReadTimeMatch = article.readTime >= 5 && article.readTime <= 15;
+                } else if (readTimeFilter === 'long') {
+                    isReadTimeMatch = article.readTime > 15;
+                }
+
+                return isArchivedMatch && isSearchMatch && inCollection && isReadTimeMatch;
             });
 
             filteredArticles.sort((a, b) => {
@@ -1684,7 +1758,7 @@
             const processedContent = processArticleContent(currentArticle.content);
             const authorInfo = currentArticle.author ? `<span class="font-medium">${currentArticle.author}</span>` : '';
             const dateInfo = currentArticle.publishedDate ? ` &bull; ${currentArticle.publishedDate}` : '';
-            const readTimeInfo = currentArticle.readTime ? ` &bull; ${currentArticle.readTime} min read` : '';
+            const readTimeInfo = currentArticle.readTime ? ` &bull; <span id="time-to-finish">${currentArticle.readTime} min read</span>` : '';
 
             const metadataHTML = `
                 <div class="text-gray-600 dark:text-gray-400 mb-8 text-sm">
@@ -1734,6 +1808,7 @@
                 applySettings();
                 applyHighlightsToReader();
                 setupTextSelectionListeners();
+                renderHighlightMap();
                 if (currentArticle.lastReadPosition > 0) {
                     window.scrollTo(0, currentArticle.lastReadPosition);
                 }
@@ -2430,6 +2505,17 @@
 
             const progress = (scrollTop / scrollableHeight) * 100;
             progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+            
+            // Update time to finish
+            const timeToFinishEl = document.getElementById('time-to-finish');
+            if (timeToFinishEl && currentArticle && currentArticle.readTime) {
+                const remainingTime = Math.ceil(currentArticle.readTime * (1 - (scrollTop / scrollableHeight)));
+                if (remainingTime > 0) {
+                    timeToFinishEl.textContent = `${remainingTime} min to finish`;
+                } else {
+                    timeToFinishEl.textContent = 'Finished!';
+                }
+            }
         }
 
         async function saveReadingPosition() {
@@ -2666,6 +2752,30 @@
             }
         }
 
+        function renderHighlightMap() {
+            highlightMap.innerHTML = '';
+            const articleContent = document.getElementById('article-content');
+            if (!articleContent || !currentArticle) return;
+
+            const articleHighlights = highlights.filter(h => h.articleId === currentArticle.id);
+            const contentHeight = articleContent.scrollHeight;
+
+            articleHighlights.forEach(h => {
+                const highlightEl = document.querySelector(`mark[data-highlight-id="${h.highlightId}"]`);
+                if (highlightEl) {
+                    const yPos = highlightEl.offsetTop / contentHeight * 100;
+                    const marker = document.createElement('div');
+                    marker.className = 'highlight-marker';
+                    marker.style.top = `${yPos}%`;
+                    marker.style.backgroundColor = getComputedStyle(highlightEl).backgroundColor;
+                    marker.addEventListener('click', () => {
+                        highlightEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });
+                    highlightMap.appendChild(marker);
+                }
+            });
+        }
+
 
         // --- Event Listeners Setup ---
         function setupEventListeners() {
@@ -2744,11 +2854,16 @@
             // Search and sorting
             document.getElementById('search-library-input').addEventListener('input', renderLibrary);
             document.getElementById('sort-library-select').addEventListener('change', renderLibrary);
+            document.getElementById('read-time-filter').addEventListener('change', renderLibrary);
             document.getElementById('search-highlights-input').addEventListener('input', renderHighlights);
             archiveToggle.addEventListener('change', (e) => {
                 showArchived = e.target.checked;
                 renderLibrary();
             });
+            document.getElementById('empty-state-add-btn').addEventListener('click', () => {
+                articleUrlInput.focus();
+            });
+
 
             // Settings
             settingsBtn.addEventListener('click', (e) => {
@@ -3041,7 +3156,9 @@
 
             window.addEventListener('scroll', () => {
                 updateReadingProgress();
-                document.body.classList.remove('focus-mode');
+                if (document.body.classList.contains('focus-mode')) {
+                    document.body.classList.remove('focus-mode');
+                }
 
                 if (readerView.style.display === 'block') {
                     if (readingPositionSaveTimeout) clearTimeout(readingPositionSaveTimeout);
